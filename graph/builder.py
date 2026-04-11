@@ -1,4 +1,5 @@
 import networkx as nx
+import matplotlib.pyplot as plt
 
 from extraction.models import FileModule
 
@@ -22,3 +23,25 @@ def build_graph(modules: list[FileModule]) -> nx.DiGraph:
                 graph.add_edge(node_id, target)
 
     return graph
+
+
+def visualize_graph(graph: nx.DiGraph, output_path: str = "graph.png") -> None:
+    # Compute node positions using spring layout for readable spacing
+    pos = nx.spring_layout(graph, seed=42)
+
+    plt.figure(figsize=(12, 8))
+
+    # Draw nodes as light blue circles with black borders
+    nx.draw_networkx_nodes(graph, pos, node_color="lightblue", node_size=1500)
+
+    # Draw directed edges with arrows to show call direction
+    nx.draw_networkx_edges(graph, pos, arrows=True, arrowsize=20)
+
+    # Draw labels using only the function name part (after '::') for readability
+    labels = {node: node.split("::")[-1] for node in graph.nodes}
+    nx.draw_networkx_labels(graph, pos, labels=labels, font_size=8)
+
+    plt.axis("off")
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
