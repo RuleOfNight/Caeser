@@ -37,8 +37,12 @@ def visualize_graph(graph: nx.DiGraph, output_path: str = "graph.png") -> None:
     # Draw directed edges with arrows to show call direction
     nx.draw_networkx_edges(graph, pos, arrows=True, arrowsize=20)
 
-    # Draw labels using only the function name part (after '::') for readability
-    labels = {node: node.split("::")[-1] for node in graph.nodes}
+    # Build label as "function_name (short_file.py)" by splitting node id on '::'
+    # Node id format: "path/to/file.py::function_name"
+    labels = {
+        node: f"{node.split('::')[-1]} ({node.split('::')[0].split('/')[-1]})"
+        for node in graph.nodes
+    }
     nx.draw_networkx_labels(graph, pos, labels=labels, font_size=8)
 
     plt.axis("off")
