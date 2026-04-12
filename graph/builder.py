@@ -19,7 +19,10 @@ def build_graph(modules: list[FileModule]) -> nx.DiGraph:
 
     for node_id, fn in all_functions.items():
         for call in fn.calls:
-            targets = [nid for nid in all_functions if nid.endswith(f"::{call}")]
+            # Use last segment so dotted calls like "os.path.join" or
+            # "user.save" can still match a known function named "join" / "save"
+            last = call.split(".")[-1]
+            targets = [nid for nid in all_functions if nid.endswith(f"::{last}")]
             for target in targets:
                 graph.add_edge(node_id, target)
 

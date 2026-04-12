@@ -34,6 +34,13 @@ def test_no_edge_for_unknown_call():
     assert len(g.edges) == 0
 
 
+def test_edge_created_for_dotted_call():
+    # "user.save" resolves via last segment "save" → a.py::save
+    mod = _mod("a.py", [("c", ["user.save"]), ("save", [])])
+    g = build_graph([mod])
+    assert g.has_edge("a.py::c", "a.py::save")
+
+
 def test_cross_module_edge():
     mod_a = _mod("a.py", [("foo", ["bar"])])
     mod_b = _mod("b.py", [("bar", [])])
@@ -140,3 +147,23 @@ def test_visualize_subgraph_with_cycle_does_not_raise(
     g = build_graph([_mod("a.py", [("alpha", ["beta"]), ("beta", ["alpha"])])])
     visualize_subgraph(g, "a.py::alpha", depth=2)
     mock_plt.savefig.assert_called_once()
+
+
+def test_visualize_subgraph_short_name_resolves():
+    """Short name like 'foo' should resolve to the full node ID."""
+    g = build_graph([_mod("a.py", [("foo", [])])])
+    # Should not raise — short name gets resolved internally
+    with patch("graph.builder.plt"), \
+         patch("graph.builder.nx.spring_layout", return_value={}), \
+         patch("graph.builder.nx.draw_networkx_nodes"), \
+         patch("graph.builder.nx.draw_networkx_edges"), \
+         patch("graph.builder.nx.draw_networkx_labels"):
+        visualize_subgraph(g, "foo", depth=1)
+
+
+def test_visualize_subgraph_unknown_node_returns_early():
+    """Unknown node should return early without drawing."""
+    g = build_graph([_mod("a.py", [("foo", [])])])
+    with patch("graph.builder.plt") as mock_plt:
+        visualize_subgraph(g, "nonexistent", depth=1)
+        mock_plt.savefig.assert_not_called()
