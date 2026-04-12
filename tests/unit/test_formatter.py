@@ -27,22 +27,23 @@ def simple_graph():
 def test_explain_lists_callees():
     g = simple_graph()
     result = explain_function(g, "a.py::foo")
-    # Both callees must appear in the output
-    assert "a.py::bar" in result
-    assert "a.py::baz" in result
+    # Both callees must appear in the tree output (short label format)
+    assert "bar (a.py)" in result
+    assert "baz (a.py)" in result
 
 
-def test_explain_format_prefix():
+def test_explain_root_label():
     g = simple_graph()
     result = explain_function(g, "a.py::foo")
-    assert result.startswith("Function a.py::foo calls:")
+    # Root line uses short label: "func (file.py)"
+    assert result.startswith("foo (a.py)")
 
 
-def test_explain_no_calls_returns_none_label():
+def test_explain_no_calls_returns_just_root():
     g = simple_graph()
-    # bar calls nothing — output should say "none"
+    # bar calls nothing — tree has only the root line
     result = explain_function(g, "a.py::bar")
-    assert result == "Function a.py::bar calls: none"
+    assert result == "bar (a.py)"
 
 
 def test_explain_single_callee():
@@ -52,7 +53,8 @@ def test_explain_single_callee():
     ])]
     g = build_graph(mods)
     result = explain_function(g, "m.py::entry")
-    assert result == "Function m.py::entry calls: m.py::helper"
+    assert "entry (m.py)" in result
+    assert "helper (m.py)" in result
 
 
 def test_explain_returns_string():

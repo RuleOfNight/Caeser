@@ -32,3 +32,7 @@ Thumbs.db
 # Project setup
 .env
 .env.local
+
+
+tests/
+.tests/
