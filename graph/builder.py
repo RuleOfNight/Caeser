@@ -2,6 +2,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from extraction.models import FileModule
+from query.graph_query import get_call_chain
 
 
 def build_graph(modules: list[FileModule]) -> nx.DiGraph:
@@ -25,25 +26,69 @@ def build_graph(modules: list[FileModule]) -> nx.DiGraph:
     return graph
 
 
-def visualize_graph(graph: nx.DiGraph, output_path: str = "graph.png") -> None:
-    # Compute node positions using spring layout for readable spacing
-    pos = nx.spring_layout(graph, seed=42)
+def _collect_nodes(chain: dict | str) -> set[str]:
+    """de quy qua dict cua get_call_chain de lay ra cac node"""
+    nodes = set()
+    if isinstance(chain, str):
+        # "[cycle]" -> stop this branch
+        return nodes
+    for node_id, subtree in chain.items():
+        nodes.add(node_id)
+        nodes |= _collect_nodes(subtree)
+    return nodes
 
+
+def visualize_subgraph(
+    
+    graph: nx.DiGraph,
+    func_name: str,
+    depth: int = 1,
+    output_path: str = "graph.png",
+) -> None:
+    """
+    Visualize the subgraph of a function
+    Args:
+        graph: The graph to visualize
+        func_name: The name of the function to visualize
+        depth: The depth of the subgraph to visualize
+        output_path: The path to save the visualization
+
+    get_call_chain(graph, func_name, depth)   →  nested dict
+          ↓
+    _collect_nodes(chain)                     →  set of node IDs
+          ↓
+    graph.subgraph(nodes)                     →  subgraph view (only nodes + edges in the set)
+          ↓
+    draw subgraph using matplotlib
+    """
+    # Resolve the function name to a full node ID if necessary
+    actual_node = func_name
+    if actual_node not in graph:
+        candidates = [n for n in graph.nodes if n.endswith(f"::{func_name}")]
+        if candidates:
+            actual_node = candidates[0]
+        else:
+            print(f"Error: Node '{func_name}' not found in the graph.")
+            return
+
+    # Build the call chain and collect only the nodes it contains
+    chain = get_call_chain(graph, actual_node, depth=depth)
+    nodes = _collect_nodes(chain)
+
+    sub = graph.subgraph(nodes)
+
+    pos = nx.spring_layout(sub, seed=42)
     plt.figure(figsize=(12, 8))
 
-    # Draw nodes as light blue circles with black borders
-    nx.draw_networkx_nodes(graph, pos, node_color="lightblue", node_size=1500)
+    nx.draw_networkx_nodes(sub, pos, node_color="lightblue", node_size=1500)
+    nx.draw_networkx_edges(sub, pos, arrows=True, arrowsize=20)
 
-    # Draw directed edges with arrows to show call direction
-    nx.draw_networkx_edges(graph, pos, arrows=True, arrowsize=20)
-
-    # Build label as "function_name (short_file.py)" by splitting node id on '::'
-    # Node id format: "path/to/file.py::function_name"
+    # Label format: "func_name (file.py)"
     labels = {
         node: f"{node.split('::')[-1]} ({node.split('::')[0].split('/')[-1]})"
-        for node in graph.nodes
+        for node in sub.nodes
     }
-    nx.draw_networkx_labels(graph, pos, labels=labels, font_size=8)
+    nx.draw_networkx_labels(sub, pos, labels=labels, font_size=8)
 
     plt.axis("off")
     plt.tight_layout()
