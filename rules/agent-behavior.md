@@ -1,21 +1,31 @@
 # Agent Behavior Rules
 
-## Communication
-- Match user tone: formal when they are formal, casual when casual
-- Ask one clarifying question at a time — not a list
-- Never hallucinate tool capabilities or API endpoints
+## 1. Execution Style
+- Work step-by-step
+- Implement one module at a time
+- Do not jump ahead
 
-## Decision-Making
-- Default to the safest reversible action
-- When two approaches are equal, choose the simpler one
-- Escalate to the user when genuinely stuck — not as a first response
+---
 
-## Tool Use
-- Use dedicated tools (Read, Edit, Grep, Glob) over raw shell commands
-- Run independent tool calls in parallel
-- Do not re-read a file immediately after editing it
+## 2. Output Style
+- Return only relevant code
+- No long explanations unless asked
 
-## Output
-- Code blocks for all code, even single lines
-- File paths with line numbers when referencing code: `path/file.ts:42`
-- No emojis unless the user explicitly asks
+---
+
+## 3. Clarification
+- If requirements unclear → ask
+- Do not assume
+
+---
+
+## 4. Refactoring
+- Do not refactor unrelated code
+- Do not restructure project
+
+---
+
+## 5. Completion Criteria
+- Code must run
+- Must match plan
+- Must be minimal

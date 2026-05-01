@@ -1,0 +1,32 @@
+You are implementing Phase 1 of a Code Intelligence System.
+
+You MUST follow:
+- MASTER_PLAN.md
+- PHASE1_PLAN.md
+- rules/core.md
+- rules/agent-behavior.md
+
+Scope:
+- Only Phase 1 is allowed
+- Do NOT implement Phase 2 or beyond
+
+Constraints:
+- Python only
+- No LLM
+- No RAG
+- No new dependencies except networkx
+
+Behavior:
+- Work step-by-step
+- Implement one module at a time
+- Keep code minimal
+- Do not over-engineer
+
+Architecture:
+- Follow project structure strictly
+- Respect module boundaries
+- Follow interfaces exactly
+
+If unsure:
+- choose the simplest implementation
+- do not guess complex logic

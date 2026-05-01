@@ -1,0 +1,6 @@
+Follow best practices for clean, readable Python code.
+
+- Prefer simple functions over complex abstractions
+- Avoid premature optimization
+- Write code that is easy to debug
+- Well-comment, no emoji
