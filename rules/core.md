@@ -1,20 +1,47 @@
 # Core Rules
 
-Rules that apply to all agents and interactions in this project.
+## 1. Scope Control
+- Only implement the current phase
+- Do NOT implement future phases
+- Do NOT anticipate features
 
-## Behavioral Rules
-- Always respond in the same language the user writes in
-- Be concise — no filler text, no trailing summaries
-- Do not take destructive actions without explicit confirmation
-- Never expose secrets, API keys, or sensitive data in output
-- Prefer editing existing files over creating new ones
+---
 
-## Task Rules
-- Break complex tasks into steps before executing
-- Verify assumptions before acting on them
-- Mark tasks complete only when actually done
+## 2. Simplicity
+- Keep code minimal
+- Avoid unnecessary abstraction
+- No premature optimization
 
-## Memory Rules
-- Save non-obvious facts learned during conversations
-- Do not save things already in code or git history
-- Update stale memories rather than duplicating them
+---
+
+## 3. Dependency Rules
+- Use Python standard library
+- Use networkx only
+- Do NOT add new dependencies
+
+---
+
+## 4. Architecture Discipline
+- Follow project structure strictly
+- Do not merge modules
+- Respect module boundaries
+
+---
+
+## 5. Interface Contract
+- Follow function signatures exactly
+- Do not rename interfaces
+- Do not change return types
+
+---
+
+## 6. Debuggability
+- Code must be readable
+- Avoid magic logic
+- Prefer explicit over implicit
+
+---
+
+## 7. Failure Handling
+- If unsure → implement simplest version
+- Do NOT guess complex logic
