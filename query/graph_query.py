@@ -1,123 +1,90 @@
 import networkx as nx
 
-# Sentinel value used in the visited dict to mark a node as "currently being
-# explored" — distinguishes an active cycle from a node simply seen before
-# on a different branch.
-_IN_PROGRESS = "__cycle__"
+def get_node_context(graph: nx.MultiDiGraph, node_id: str) -> dict:
+    """Lấy thông tin chi tiết của một node."""
+    if node_id not in graph:
+        return {}
+    node_data = graph.nodes[node_id]
+    return {
+        "id": node_id,
+        "name": node_data.get("name"),
+        "type": node_data.get("type"),
+        "file_path": node_data.get("file_path"),
+        "docstring": node_data.get("content", ""),
+        "source_code": node_data.get("source_code", "N/A")
+    }
 
+def get_function_calls(graph: nx.MultiDiGraph, node_id: str) -> list[str]:
+    """Lấy danh sách các hàm mà node_id đang gọi."""
+    if node_id not in graph: return []
+    return [v for _, v, data in graph.out_edges(node_id, data=True) if data.get("relationship") == "CALLS"]
 
-def get_function_calls(graph: nx.DiGraph, func_name: str) -> list[str]:
-    # Return all functions that func_name directly calls (outgoing edges).
-    return list(graph.successors(func_name))
-
-
-def get_callers(graph: nx.DiGraph, func_name: str) -> list[str]:
-    # Return all functions that directly call func_name (incoming edges).
-    # Answers: "who calls this?"
-    return list(graph.predecessors(func_name))
-
-
-def get_call_chain(graph: nx.DiGraph, func_name: str, depth: int = 2) -> dict:
-    """
-    Build a call-tree rooted at func_name up to the given depth.
-
-    Return value is a nested dict:
-        {
-            "a::foo": {
-                "b::bar": {
-                    "c::baz": {}   # depth exhausted here
-                },
-                "a::foo": "[cycle]"  # foo calls itself — detected and stopped
-            }
-        }
-
-    Cycle handling
-    --------------
-    Each recursive call carries its own `path` set — the set of nodes on the
-    *current* ancestor chain.  A node is a cycle only when it appears again on
-    the same path (i.e. we are about to re-enter a function we have not yet
-    finished expanding).  Nodes seen on *other* branches are NOT treated as
-    cycles; they are expanded normally so we do not lose valid edges.
-
-    When a cycle is detected the value is the string "[cycle]" instead of a
-    dict, making cycles visible in the output rather than silently dropping them.
-    """
-
+def get_call_chain(graph: nx.MultiDiGraph, start_node_id: str, depth: int = 2) -> dict:
+    """Dựng cây gọi hàm (Call Tree), chặn lặp vòng (cycle)."""
     def _expand(node: str, remaining_depth: int, path: frozenset) -> dict | str:
-        # A cycle means we reached a node that is already on the current path.
-        # Mark it explicitly so callers can see the loop.
-        if node in path:
-            return "[cycle]"
+        if node in path: return "[cycle]"
+        if remaining_depth == 0: return {}
 
-        # Depth exhausted — stop expanding but do not mark as cycle.
-        if remaining_depth == 0:
-            return {}
-
-        # Add current node to the path before going deeper.
-        # frozenset ensures the parent's path is not mutated (pure functional style).
         current_path = path | {node}
-
         children = {}
-        for callee in graph.successors(node):
+        callees = [v for _, v, data in graph.out_edges(node, data=True) if data.get("relationship") == "CALLS"]
+        
+        for callee in callees:
             children[callee] = _expand(callee, remaining_depth - 1, current_path)
-
         return children
 
-    return {func_name: _expand(func_name, depth, frozenset())}
+    return {start_node_id: _expand(start_node_id, depth, frozenset())}
 
-
-def format_call_chain(chain: dict, indent: int = 0) -> str:
-    """
-    Render the nested dict returned by get_call_chain into a human-readable
-    indented tree.
-
-    Example output:
-        app/main.py::run
-        ├── ingestion/file_scanner.py::scan_py_files
-        ├── explain/formatter.py::explain_function
-        │   └── query/graph_query.py::get_function_calls
-        └── graph/builder.py::build_graph  [cycle]
-
-    Each node label is shortened to "function_name (file.py)" for readability.
-    Cycle nodes are annotated with "[cycle]".
-    """
-
+def format_call_chain(chain: dict) -> str:
+    """Format Call Tree ra dạng text có nhánh cây."""
     def _short(node_id: str) -> str:
-        # Convert "path/to/file.py::func_name" -> "func_name (file.py)"
-        parts = node_id.split("::")
-        func = parts[-1]
-        file = parts[0].split("/")[-1]
-        return f"{func} ({file})"
+        content = node_id.split(":", 1)[-1]
+        if "::" in content:
+            file_path, name = content.split("::", 1)
+            file_name = file_path.split("/")[-1].split("\\")[-1]
+            return f"{name} ({file_name})"
+        return content
 
     def _render(node_id: str, subtree: dict | str, prefix: str, is_last: bool) -> list[str]:
-        # Choose the correct tree-drawing connector based on position
         connector = "└── " if is_last else "├── "
-        # The continuation prefix for children depends on whether this is last
         extension = "    " if is_last else "│   "
-
         label = _short(node_id)
-
-        # Cycle nodes carry the string "[cycle]" instead of a dict
-        if subtree == "[cycle]":
-            return [prefix + connector + label + "  [cycle]"]
-
+        if subtree == "[cycle]": return [prefix + connector + label + "  [cycle]"]
         lines = [prefix + connector + label]
-
-        # Recurse into children with updated prefix
         children = list(subtree.items())
         for i, (child_id, child_subtree) in enumerate(children):
-            child_is_last = (i == len(children) - 1)
-            lines += _render(child_id, child_subtree, prefix + extension, child_is_last)
-
+            lines += _render(child_id, child_subtree, prefix + extension, i == len(children)-1)
         return lines
 
     lines = []
-    # The root of the chain dict is a single key (the starting function)
     for root_id, subtree in chain.items():
         lines.append(_short(root_id))
         children = list(subtree.items())
         for i, (child_id, child_subtree) in enumerate(children):
-            is_last = (i == len(children) - 1)
-            lines += _render(child_id, child_subtree, "", is_last)
-
+            lines += _render(child_id, child_subtree, "", i == len(children)-1)
     return "\n".join(lines)
+
+def search_jit_context(graph: nx.MultiDiGraph, vector_store, query_text: str, top_k: int = 5) -> list[dict]:
+    """Tìm kiếm lai JIT (Just-in-Time) bằng RRF, trả về context Node để đưa cho LLM."""
+    # 1. Tìm kiếm Vector
+    vector_ids = vector_store.search_vector(query_text, top_k=top_k)
+    
+    # 2. Tìm kiếm BM25
+    bm25_ids = vector_store.search_bm25(query_text, top_k=top_k)
+    
+    # 3. Dung hợp RRF (Reciprocal Rank Fusion)
+    k_penalty = 60
+    rrf_scores = {}
+    
+    for rank, doc_id in enumerate(vector_ids):
+        rrf_scores[doc_id] = rrf_scores.get(doc_id, 0) + 1 / (k_penalty + rank + 1)
+        
+    for rank, doc_id in enumerate(bm25_ids):
+        rrf_scores[doc_id] = rrf_scores.get(doc_id, 0) + 1 / (k_penalty + rank + 1)
+        
+    # Sắp xếp lấy Top K kết quả tốt nhất
+    fused_results = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
+    top_ids = [item[0] for item in fused_results][:top_k]
+    
+    # 4. Truy xuất context chi tiết từ Graph
+    return [get_node_context(graph, node_id) for node_id in top_ids if node_id in graph]
