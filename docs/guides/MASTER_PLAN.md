@@ -1,176 +1,246 @@
-# Personal AI Assistant — Master Plan
+# MASTER PLAN — Personal Knowledge Graph Assistant
 
 ## 1. Objective
 
-Build a modular **Personal AI Assistant** capable of:
+Build a personal assistant that can:
+- Extract structured knowledge from **codebases** and **research papers**
+- Represent knowledge as a **graph**
+- Enable querying, explanation, and analysis via **LLM with graph-first context**
 
-- Understanding and analyzing codebases
-- Answering questions based on documents
-- Analyzing research papers and extracting insights
-- Supporting future multi-agent workflows
-
-The system is designed to be **extensible, modular, and hybrid (local + API LLM)**.
+The system focuses on **structured understanding**, not raw LLM reasoning.
 
 ---
 
-## 2. Design Principles
+## 2. Core Principle
 
-- Modular architecture (each capability is isolated)
-- Clear separation of responsibilities
-- Start simple → iterate
-- No over-engineering in early phases
-- Prefer deterministic pipelines before LLM reasoning
+Three layers:
 
----
-
-## 3. High-Level Architecture
-
-
-User Query
-↓
-[Routing Layer]
-↓
-[Execution Layer]
-├── Code Intelligence (Graph-based)
-├── Document QA (RAG)
-└── Research Analysis (Graph-based)
-↓
-[LLM / Response Generation]
-
+1. **Extraction Layer** — parse input into raw graph
+2. **Knowledge Layer** — graph storage, normalization, query
+3. **Reasoning Layer** — LLM with structured context from graph
 
 ---
 
-## 4. System Components
+## 3. Architecture Overview
 
-### 4.1 Code Intelligence System
-- Parses codebase
-- Builds structural graph
-- Supports dependency and flow analysis
-- Provides explainable outputs
-
----
-
-### 4.2 Document QA System (RAG)
-- Processes documents
-- Uses embeddings + vector search
-- Retrieves relevant context
-- Generates grounded answers
-
----
-
-### 4.3 Research Analysis System
-- Converts papers into structured graph
-- Extracts:
-  - problem
-  - method
-  - limitations
-- Enables comparison and gap detection
+```
+Input (code / paper)
+        ↓
+Extraction Layer
+  - Code: tree-sitter / Python AST
+  - Paper: Graphify-style LLM extraction
+        ↓
+Raw Graph (per document) → JSON (persisted to disk)
+        ↓
+Resolver (cross-file reference resolution)
+        ↓
+Merger (project-level unified graph)
+        ↓
+Neo4j (graph storage)
+        ↓
+Export Layer
+  - Obsidian vault (visualization + browse)
+        ↓
+Query Layer (graph-first → LLM reasoning)
+  - CLI (conversational)
+```
 
 ---
 
-### 4.4 Routing Layer (Future)
-- Classifies user queries
-- Routes to appropriate system component
+## 4. Design Decisions
+
+### 4.1 Two Independent Graph Systems
+- **Code graph** and **paper graph** are fully independent
+- Separate extraction pipelines, separate Neo4j schemas
+- No cross-linking between code and paper nodes
+- Shared infrastructure: same Neo4j instance, same query layer pattern
+
+### 4.2 Code Extraction — AST-based
+- Use Python's built-in `ast` module (sufficient for Python-only)
+- Migrate to `tree-sitter` only if multi-language support needed later
+- Coarse-grained schema: Module, Class, Function only
+- No Variable nodes, no Statement nodes
+
+### 4.3 Paper Extraction — Graphify-style LLM
+- Use LLM to extract nodes (concepts) and edges (relations)
+- Probabilistic by nature → confidence scores required
+- Deferred to Phase 2 (paper pipeline)
+
+### 4.4 No Multi-Agent System
+- No CrewAI, no LangGraph, no agent orchestration
+- Single linear pipeline
+- Routing via simple conditional logic only
+
+### 4.5 Confidence-aware Graph
+- Every edge must carry a `confidence` score (0.0 to 1.0)
+- AST-derived edges: `confidence = 1.0`
+- Resolved references: `confidence = 0.7–0.9` depending on ambiguity
+- Unresolved references: `confidence = 0.0` (kept for debug, filtered in queries)
+
+### 4.6 JSON as Intermediate Format
+- Raw graph persisted to disk as JSON before Neo4j load
+- Enables: debug without re-running, incremental updates, resume on failure
+
+### 4.7 UI Strategy
+- **Obsidian** for graph visualization and browsing (wikilinks auto-generate graph)
+- **CLI (conversational)** for LLM-powered Q&A
+- No custom web UI
+
+### 4.8 Query Strategy — Graph-first
+- Query traverses Neo4j first → builds structured context
+- Context passed to LLM for reasoning
+- LLM never queries graph directly
 
 ---
 
-### 4.5 Orchestration Layer (Future)
-- Coordinates multi-step workflows
-- Enables multi-agent execution
+## 5. Graph Schema — Code
+
+### Node Types
+| Type     | Description                        |
+|----------|------------------------------------|
+| Module   | Each `.py` file (not `__init__.py`)|
+| Class    | Class definition                   |
+| Function | Top-level function or class method |
+
+### Node Properties
+```json
+{
+  "id": "module:src.utils",
+  "name": "utils",
+  "type": "Module | Class | Function",
+  "file_path": "src/utils.py",
+  "line_start": 1,
+  "docstring": "optional string"
+}
+```
+
+### Edge Types
+| Type     | Source → Target              | Notes                        |
+|----------|------------------------------|------------------------------|
+| IMPORTS  | Module → Module              | Internal only, no 3rd party  |
+| DEFINES  | Module → Class/Function      |                              |
+| CONTAINS | Class → Function             | Methods only                 |
+| CALLS    | Function → Function          | Best-effort, may be partial  |
+| INHERITS | Class → Class                |                              |
+
+### Edge Properties
+```json
+{
+  "type": "IMPORTS",
+  "source_id": "module:src.main",
+  "target_id": "module:src.utils",
+  "confidence": 1.0
+}
+```
 
 ---
 
-## 5. Development Phases
+## 6. Extraction Rules
 
-### Phase 1 — Code Intelligence (Graph-based)
-- Parse code (AST)
-- Extract structure (functions, calls)
-- Build graph representation
-- Implement query + explanation
-
----
-
-### Phase 2 — Document QA (RAG)
-- Chunk documents
-- Generate embeddings
-- Store in vector database
-- Implement retrieval + answer generation
+- **Skip `__init__.py` as nodes** — but flatten their re-exports before skipping
+- **Skip external/third-party imports** — only track internal project modules
+- **Skip nested functions** — top-level and class methods only
+- **Skip Variable nodes** — too fine-grained, noisy for Q&A
+- **Async functions** treated same as regular functions
+- **Decorated functions** — capture decorator name in node properties
 
 ---
 
-### Phase 3 — Routing Layer
-- Classify query types
-- Route to correct module
+## 7. Phases
+
+### Phase 1 — Code Graph Extraction Core ← CURRENT
+Goal: Extract graph from Python codebase → JSON → Neo4j → Obsidian export → basic CLI query
+Details: See `PHASE1_PLAN.md`
+
+### Phase 2 — Paper Graph Extraction
+Goal: Extract graph from research papers using Graphify-style LLM extraction
+Output: Same JSON format as code graph, loaded into separate Neo4j labels
+
+### Phase 3 — Normalization Layer
+Goal: Entity resolution within each graph
+- Merge duplicate concept nodes
+- Canonical naming
+- Embedding similarity + LLM-as-judge hybrid approach
+
+### Phase 4 — Reasoning Layer
+Goal: Conversational CLI with graph-first context building
+- Explain a function/concept
+- Compare two nodes
+- Summarize a module/paper
+
+### Phase 5 — Multi-Document Knowledge Network (Paper)
+- **5a**: Multi-paper graph with factual + relational linking (`extends`, `contradicts`, `builds_on`)
+- **5b**: Concept-centric wiki generation (Karpathy-style, cross-paper)
+- **5c**: Research gap inference — only after 5b is stable
 
 ---
 
-### Phase 4 — Orchestration (Multi-step workflows)
-- Define execution flows
-- Integrate multiple modules
+## 8. Non-Goals
+
+- No multi-agent orchestration
+- No complex web UI (Obsidian + CLI is sufficient)
+- No perfect static analysis (graph is approximation, use confidence scores)
+- No cross-linking between code graph and paper graph
+- No large-scale distributed system
 
 ---
 
-### Phase 5 — Research Analysis
-- Build graph from papers
-- Extract structured knowledge
-- Compare and identify gaps
+## 9. Risks & Mitigations
+
+| Risk | Mitigation |
+|------|-----------|
+| Noisy extraction (CALLS edges) | Confidence scores, filter `confidence < 0.5` in queries |
+| Graph fragmentation across files | Resolver + normalization layer |
+| LLM hallucination in reasoning | Graph-first context, reference node IDs in prompt |
+| `__init__.py` re-export confusion | Flatten re-exports in resolver before skipping file |
+| Duplicate nodes same name | Canonical ID scheme: `type:filepath::name` |
 
 ---
 
-### Phase 6 — Hybrid LLM Integration
-- Combine local LLM and API
-- Optimize cost and performance
+## 10. Project Structure
+
+```
+project/
+├── src/
+│   ├── extraction/
+│   │   ├── extractor.py      # AST visitor, per-file graph extraction
+│   │   ├── resolver.py       # Cross-file reference resolution
+│   │   ├── merger.py         # Merge per-file graphs → project graph
+│   │   └── models.py         # GraphNode, GraphEdge, NodeType, EdgeType
+│   ├── graph/
+│   │   ├── loader.py         # JSON → Neo4j
+│   │   └── queries.py        # Cypher query helpers
+│   ├── export/
+│   │   └── obsidian.py       # Graph → Obsidian markdown vault
+│   ├── reasoning/
+│   │   ├── context_builder.py  # Graph traversal → structured context
+│   │   └── llm.py              # LLM call with context
+│   └── cli/
+│       ├── extract.py        # CLI: extract command
+│       ├── export.py         # CLI: export command
+│       └── query.py          # CLI: conversational query command
+├── codebases/                # Input: Python projects to analyze
+├── papers/                   # Input: PDFs/papers (Phase 2)
+└── docs/
+    ├── MASTER_PLAN.md
+    └── PHASE1_PLAN.md
+```
 
 ---
 
-## 6. Scope Control
+## 11. Success Criteria
 
-### Important Rules
+### Minimum Viable (Phase 1)
+- Extract graph from a Python project
+- Store in Neo4j
+- Browse structure in Obsidian
+- Answer: "what methods does class X have?", "which modules import Y?"
 
-- Each phase must be implemented **independently**
-- Do NOT anticipate future phases during implementation
-- Do NOT introduce unnecessary dependencies
-- Keep implementations minimal and testable
+### Intermediate (Phase 2–3)
+- Handle research papers
+- Merge overlapping concepts within same domain
 
----
-
-## 7. Current Focus
-
-The current implementation target is:
-
-> **Phase 1 — Code Intelligence System**
-
-All other phases are **out of scope for now**.
-
----
-
-## 8. Non-Goals (for now)
-
-- No multi-agent system
-- No LangGraph / CrewAI
-- No LLM-based reasoning in Phase 1
-- No distributed system design
-
----
-
-## 9. Future Direction
-
-This system will evolve into:
-
-- A hybrid AI assistant
-- Supporting:
-  - code understanding
-  - knowledge retrieval
-  - research assistance
-- With controlled multi-agent orchestration
-
----
-
-## 10. Final Note
-
-This project prioritizes:
-
-- clarity over complexity
-- working system over perfect system
-
-Build step-by-step. Validate each phase before moving forward.
+### Advanced (Phase 4–5)
+- Conversational CLI with memory
+- Cross-paper concept linking
+- Research gap hints

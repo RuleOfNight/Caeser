@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
-from extraction.extractor import extract_from_file
+from parsing.parser import parse_file
+from extraction.extractor import extract
 from graph.builder import build_graph
 from ingestion.file_scanner import scan_py_files
 
@@ -178,16 +179,32 @@ class GraphViewerApp:
         print(f"[*] Building interactive graph from {os.path.abspath(repo_path)}")
         files = scan_py_files(repo_path)
 
-        all_nodes = []
-        all_edges = []
+        modules = []
         for file_path in files:
-            nodes, edges = extract_from_file(file_path)
-            all_nodes.extend(nodes)
-            all_edges.extend(edges)
+            try:
+                tree = parse_file(file_path)
+                modules.append(extract(tree, file_path))
+            except (SyntaxError, Exception):
+                pass
 
-        graph = build_graph(all_nodes, all_edges)
-        print(f"[+] Interactive graph ready: {len(graph.nodes)} nodes, {len(graph.edges)} edges")
-        return graph
+        dg = build_graph(modules)
+
+        # Convert DiGraph to MultiDiGraph with attributes expected by the viewer
+        mg = nx.MultiDiGraph()
+        for node_id, data in dg.nodes(data=True):
+            mg.add_node(
+                node_id,
+                name=data.get("name", node_id.split("::")[-1]),
+                type="Function",
+                file_path=data.get("file", ""),
+                content="",
+                source_code="",
+            )
+        for u, v in dg.edges():
+            mg.add_edge(u, v, relationship="CALLS")
+
+        print(f"[+] Interactive graph ready: {len(mg.nodes)} nodes, {len(mg.edges)} edges")
+        return mg
 
     def _build_layout(self) -> None:
         self.topbar = ttk.Frame(self.root, padding=(10, 10, 10, 0))

@@ -1,34 +1,17 @@
-from enum import Enum
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List
+from typing import List
 
-class NodeType(Enum):
-    FILE = "File"
-    CLASS = "Class"
-    FUNCTION = "Function"
-    VARIABLE = "Variable"
-    DEPENDENCY = "Dependency"
 
-class EdgeType(Enum):
-    CONTAINS = "CONTAINS"
-    CALLS = "CALLS"
-    INHERITS = "INHERITS"
-    IMPORTS = "IMPORTS"
-    USES_VARIABLE = "USES_VARIABLE"
-
+# calls lưu tên thô từ AST (vd: "bar", "os.path.join") — chưa resolve thành node_id
 @dataclass
-class GraphNode:
-    id: str
+class Function:
     name: str
-    type: NodeType
-    file_path: str
-    content: str = ""        # Lưu docstring hoặc text mô tả
-    source_code: str = ""    # LƯU MÃ NGUỒN THÔ CỦA HÀM/CLASS ĐỂ AI ĐỌC
-    summary: str = ""        # Bản tóm tắt 1-2 câu do AI sinh ra (để tiết kiệm token)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    file: str
+    calls: List[str] = field(default_factory=list)
 
+
+# name = đường dẫn file, dùng làm prefix cho node_id: "file.py::func_name"
 @dataclass
-class GraphEdge:
-    source_id: str
-    target_id: str
-    type: EdgeType
+class FileModule:
+    name: str
+    functions: List[Function] = field(default_factory=list)
