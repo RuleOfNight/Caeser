@@ -176,33 +176,30 @@ class GraphViewerApp:
         self._render_current_view()
 
     def _build_full_graph(self, repo_path: str) -> nx.MultiDiGraph:
-        print(f"[*] Building interactive graph from {os.path.abspath(repo_path)}")
-        files = scan_py_files(repo_path)
+        from pathlib import Path
+        from extraction.resolver import ImportResolver
+        from extraction.models import GraphNode, GraphEdge
+        from typing import List
 
-        modules = []
+        root = Path(repo_path).resolve()
+        print(f"[*] Building interactive graph from {root}")
+        files = [f for f in scan_py_files(str(root)) if Path(f).name != "__init__.py"]
+
+        all_nodes: List[GraphNode] = []
+        all_edges: List[GraphEdge] = []
         for file_path in files:
             try:
                 tree = parse_file(file_path)
-                modules.append(extract(tree, file_path))
+                nodes, edges = extract(tree, file_path)
+                all_nodes.extend(nodes)
+                all_edges.extend(edges)
             except (SyntaxError, Exception):
                 pass
 
-        dg = build_graph(modules)
+        resolver = ImportResolver(str(root), all_nodes)
+        resolved_edges = resolver.resolve(all_edges)
 
-        # Convert DiGraph to MultiDiGraph with attributes expected by the viewer
-        mg = nx.MultiDiGraph()
-        for node_id, data in dg.nodes(data=True):
-            mg.add_node(
-                node_id,
-                name=data.get("name", node_id.split("::")[-1]),
-                type="Function",
-                file_path=data.get("file", ""),
-                content="",
-                source_code="",
-            )
-        for u, v in dg.edges():
-            mg.add_edge(u, v, relationship="CALLS")
-
+        mg = build_graph(all_nodes, resolved_edges)
         print(f"[+] Interactive graph ready: {len(mg.nodes)} nodes, {len(mg.edges)} edges")
         return mg
 

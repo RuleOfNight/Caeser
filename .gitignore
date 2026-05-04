@@ -37,4 +37,11 @@ Thumbs.db
 tests/
 .tests/
 
-project_analysis.md
+.memory/
+.docs/
+CLAUDE.md
+
+.data/graph.json
+.data/obsidian
+
+.memory/
