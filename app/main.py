@@ -1,46 +1,49 @@
+import io
 import os
 import sys
-import io
 import argparse
+from pathlib import Path
+from typing import List
 
 if sys.platform == "win32":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ingestion.file_scanner import scan_py_files
 from parsing.parser import parse_file
 from extraction.extractor import extract
+from extraction.resolver import ImportResolver
+from extraction.models import GraphNode, GraphEdge
 from graph.builder import build_graph
-from query.graph_query import get_call_chain, format_call_chain
 from app.graph_viewer import launch_graph_viewer
 
 
 def run(repo_path: str):
-    """Pipeline: Scan -> Parse -> Extract -> Build Graph."""
-    print(f"[*] Scanning: {os.path.abspath(repo_path)}")
-    files = scan_py_files(repo_path)
-
+    root = Path(repo_path).resolve()
+    files = [f for f in scan_py_files(str(root)) if Path(f).name != "__init__.py"]
     if not files:
         print("[-] No Python files found.")
         return
 
-    modules = []
-    print(f"[*] Extracting AST from {len(files)} files...")
+    all_nodes: List[GraphNode] = []
+    all_edges: List[GraphEdge] = []
+    print(f"[*] Extracting {len(files)} files from {root}...")
     for f in files:
         try:
             tree = parse_file(f)
-            modules.append(extract(tree, f))
+            nodes, edges = extract(tree, f)
+            all_nodes.extend(nodes)
+            all_edges.extend(edges)
         except (SyntaxError, Exception) as e:
             print(f"[-] Skipping {f}: {e}")
 
-    total_fns = sum(len(m.functions) for m in modules)
-    print(f"[*] Building graph from {total_fns} functions...")
-    graph = build_graph(modules)
+    print("[*] Resolving references...")
+    resolver = ImportResolver(str(root), all_nodes)
+    resolved_edges = resolver.resolve(all_edges)
 
+    graph = build_graph(all_nodes, resolved_edges)
     print(f"[+] Nodes: {len(graph.nodes)} | Edges: {len(graph.edges)}")
-    if len(graph.nodes) == 0:
-        print("[-] Empty graph.")
 
 
 def main():

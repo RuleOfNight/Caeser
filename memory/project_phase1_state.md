@@ -1,0 +1,57 @@
+---
+name: Phase 1 Current State
+description: Where we are in Phase 1 — what files exist, what's built, what's still missing
+type: project
+---
+
+**Phase:** Phase 1 — Code Graph Extraction Core (IN PROGRESS)
+
+**Branch:** `khoa`
+
+**Goal:** Extract Python codebase → JSON graph → Neo4j → Obsidian export → CLI query
+
+## What exists (files on disk)
+
+### Extraction layer (partial)
+- `extraction/models.py` — GraphNode, GraphEdge, NodeType, EdgeType (needs cleanup: remove Variable, Dependency)
+- `extraction/extractor.py` — AST visitor, per-file extraction (needs patches per PHASE1_PLAN)
+- `extraction/__init__.py`
+
+### Graph layer (partial)
+- `graph/builder.py` — exists but purpose unclear vs. planned `graph/loader.py` (JSON → Neo4j)
+- `graph/__init__.py`
+
+### Query layer (partial)
+- `query/graph_query.py` — exists
+- `query/__init__.py`
+
+### App layer (exists, diverges from plan)
+- `app/main.py` — modified
+- `app/graph_viewer.py` — modified; viewer opens in a separate CMD window (not Neo4j Browser)
+
+### Tests
+- `tests/unit/test_file_scanner.py`
+
+## What's MISSING (per PHASE1_PLAN checklist)
+- `extraction/resolver.py` — cross-file reference resolution (NOT YET BUILT)
+- `extraction/merger.py` — merge per-file graphs + write JSON (NOT YET BUILT)
+- `graph/loader.py` — JSON → Neo4j (NOT YET BUILT; only builder.py exists)
+- `export/obsidian.py` — graph → Obsidian markdown vault (NOT YET BUILT)
+- `cli/extract.py`, `cli/export.py`, `cli/query.py` — CLI commands (NOT YET BUILT)
+
+## Deleted files (staged deletions)
+- ChromaDB files, vector_store.py, old agents/, old indexing/ — removed (old approach)
+- Old markdown docs (CHEATSHEET.md, HUONG_DAN_CHI_TIET.md, etc.) — cleaned up
+
+## Architecture decisions (frozen)
+- AST-based extraction (Python `ast` module), no tree-sitter
+- Neo4j for graph storage (MERGE not CREATE, idempotent)
+- JSON as intermediate format (persisted before Neo4j load)
+- Obsidian for visualization (wikilinks), no custom web UI
+- Graph-first query: Neo4j traversal → LLM context
+
+## graph_viewer.py note
+The current viewer opens in a separate CMD window. Neo4j Browser (localhost:7474) is the intended long-term graph UI.
+
+**Why:** Neo4j is for persistent storage and Cypher queries; the viewer is a debug tool.
+**How to apply:** Don't conflate the CMD viewer with Neo4j. Neo4j is used once loader.py is built.
