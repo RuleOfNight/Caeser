@@ -42,6 +42,7 @@ tests/
 CLAUDE.md
 
 .data/graph.json
-.data/obsidian
+.data/obsidian/
+data/obsidian/
 
 .memory/

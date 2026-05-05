@@ -33,11 +33,14 @@ type: project
 - `tests/unit/test_file_scanner.py`
 
 ## What's MISSING (per PHASE1_PLAN checklist)
-- `extraction/resolver.py` — cross-file reference resolution (NOT YET BUILT)
-- `extraction/merger.py` — merge per-file graphs + write JSON (NOT YET BUILT)
-- `graph/loader.py` — JSON → Neo4j (NOT YET BUILT; only builder.py exists)
-- `export/obsidian.py` — graph → Obsidian markdown vault (NOT YET BUILT)
-- `cli/extract.py`, `cli/export.py`, `cli/query.py` — CLI commands (NOT YET BUILT)
+- `cli/query.py` (or query subcommand in `cli.py`) — graph-first conversational Q&A (NOT YET BUILT)
+
+## What WAS missing but is now BUILT (updated 2026-05-05)
+- `extraction/resolver.py` — ✅ built (ImportResolver, ghost ID resolution)
+- `extraction/merger.py` — ✅ built (merge_project, JSON output)
+- `graph/loader.py` — ✅ built (JSON → Neo4j via MERGE, idempotent)
+- `export/obsidian.py` — ✅ built (graph → Obsidian vault with wikilinks)
+- `cli.py` extract + export commands — ✅ built; `--load-neo4j` flag added
 
 ## Deleted files (staged deletions)
 - ChromaDB files, vector_store.py, old agents/, old indexing/ — removed (old approach)
