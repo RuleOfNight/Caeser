@@ -1,8 +1,8 @@
 {
   "project": "PA",
   "project_root": "C:\\Users\\Admin\\OneDrive\\Tài liệu\\PA",
-  "extracted_at": "2026-05-04T01:29:20.623888",
-  "file_count": 14,
+  "extracted_at": "2026-05-06T15:07:08.150286",
+  "file_count": 16,
   "nodes": [
     {
       "id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py",
@@ -11,6 +11,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py",
       "line_start": 1,
       "docstring": null,
+      "source_code": null,
       "is_async": false,
       "decorators": []
     },
@@ -19,8 +20,9 @@
       "name": "cmd_extract",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py",
-      "line_start": 9,
+      "line_start": 15,
       "docstring": null,
+      "source_code": "def cmd_extract(args):\n    from extraction.merger import merge_project\n    merge_project(args.input, args.output, args.name)\n    if args.load_neo4j:\n        from graph.loader import load\n        load(args.output)",
       "is_async": false,
       "decorators": []
     },
@@ -29,8 +31,20 @@
       "name": "cmd_export",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py",
-      "line_start": 14,
+      "line_start": 23,
       "docstring": null,
+      "source_code": "def cmd_export(args):\n    from export.obsidian import export\n    export(args.graph, args.out)",
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_query",
+      "name": "cmd_query",
+      "type": "Function",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py",
+      "line_start": 28,
+      "docstring": null,
+      "source_code": "def cmd_query(args):\n    from query.engine import QueryEngine\n    engine = QueryEngine(args.graph)\n    print(f\"[*] Loaded graph: {args.graph}\")\n    print(\"[*] Type your question. Enter 'exit' to quit.\\n\")\n\n    history: list[dict] = []\n    while True:\n        try:\n            question = input(\"> \").strip()\n        except (EOFError, KeyboardInterrupt):\n            break\n        if not question:\n            continue\n        if question.lower() in (\"exit\", \"quit\", \"q\"):\n            break\n\n        answer, sources = engine.ask(question, history)\n        if sources:\n            print(f\"[graph] {', '.join(sources)}\")\n        print(f\"[llm]  {answer}\\n\")\n\n        history.append({\"role\": \"user\", \"content\": question})\n        history.append({\"role\": \"assistant\", \"content\": answer})",
       "is_async": false,
       "decorators": []
     },
@@ -39,8 +53,9 @@
       "name": "main",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py",
-      "line_start": 19,
+      "line_start": 54,
       "docstring": null,
+      "source_code": "def main():\n    parser = argparse.ArgumentParser(prog=\"caeser\")\n    sub = parser.add_subparsers(dest=\"command\", required=True)\n\n    p_ext = sub.add_parser(\"extract\", help=\"Extract codebase → JSON graph\")\n    p_ext.add_argument(\"--input\",  required=True, help=\"Project root directory\")\n    p_ext.add_argument(\"--output\", required=True, help=\"Output JSON path\")\n    p_ext.add_argument(\"--name\",                  help=\"Project name (default: folder name)\")\n    p_ext.add_argument(\"--load-neo4j\", action=\"store_true\", help=\"Load graph into Neo4j after extraction\")\n\n    p_exp = sub.add_parser(\"export\", help=\"Export graph → Obsidian vault\")\n    p_exp.add_argument(\"--graph\", required=True, help=\"Input JSON graph path\")\n    p_exp.add_argument(\"--out\",   required=True, help=\"Obsidian vault directory\")\n\n    p_qry = sub.add_parser(\"query\", help=\"Conversational graph-first Q&A\")\n    p_qry.add_argument(\"--graph\", required=True, help=\"Input JSON graph path\")\n\n    args = parser.parse_args()\n    if args.command == \"extract\":\n        cmd_extract(args)\n    elif args.command == \"export\":\n        cmd_export(args)\n    elif args.command == \"query\":\n        cmd_query(args)",
       "is_async": false,
       "decorators": []
     },
@@ -51,6 +66,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 1,
       "docstring": null,
+      "source_code": null,
       "is_async": false,
       "decorators": []
     },
@@ -61,6 +77,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 22,
       "docstring": null,
+      "source_code": "class ViewState:\n    graph: nx.MultiDiGraph\n    title: str\n    selected_node_id: str | None = None\n    file_path: str | None = None",
       "is_async": false,
       "decorators": [
         "dataclass"
@@ -73,6 +90,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 29,
       "docstring": null,
+      "source_code": "def _node_type_to_color(node_type: str) -> str:\n    color_map = {\n        \"File\": \"#1f77b4\",\n        \"Class\": \"#2ca02c\",\n        \"Function\": \"#d62728\",\n        \"Variable\": \"#bcbd22\",\n        \"Dependency\": \"#7f7f7f\",\n    }\n    return color_map.get(node_type, \"#999999\")",
       "is_async": false,
       "decorators": []
     },
@@ -83,6 +101,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 40,
       "docstring": null,
+      "source_code": "def _node_label(node_id: str, data: dict[str, Any]) -> str:\n    node_type = data.get(\"type\", \"\")\n    if node_type == \"File\":\n        return os.path.basename(data.get(\"file_path\") or node_id)\n    return data.get(\"name\") or node_id.split(\"::\")[-1]",
       "is_async": false,
       "decorators": []
     },
@@ -93,6 +112,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 47,
       "docstring": null,
+      "source_code": "def _safe_basename(path: str) -> str:\n    return path.replace(\"\\\\\", \"/\").split(\"/\")[-1]",
       "is_async": false,
       "decorators": []
     },
@@ -103,6 +123,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 51,
       "docstring": "Collapse the full graph into a file-to-file overview graph.",
+      "source_code": "def build_file_level_graph(full_graph: nx.MultiDiGraph) -> nx.MultiDiGraph:\n    \"\"\"Collapse the full graph into a file-to-file overview graph.\"\"\"\n    file_graph = nx.MultiDiGraph()\n    file_stats: dict[str, dict[str, Any]] = defaultdict(\n        lambda: {\"node_count\": 0, \"function_count\": 0, \"class_count\": 0, \"dependency_count\": 0}\n    )\n\n    for node_id, data in full_graph.nodes(data=True):\n        file_path = data.get(\"file_path\")\n        if not file_path:\n            continue\n\n        stats = file_stats[file_path]\n        stats[\"node_count\"] += 1\n\n        node_type = data.get(\"type\")\n        if node_type == \"Function\":\n            stats[\"function_count\"] += 1\n        elif node_type == \"Class\":\n            stats[\"class_count\"] += 1\n        elif node_type == \"Dependency\":\n            stats[\"dependency_count\"] += 1\n\n    for file_path, stats in file_stats.items():\n        label = _safe_basename(file_path)\n        file_graph.add_node(\n            file_path,\n            name=label,\n            type=\"File\",\n            file_path=file_path,\n            stats=stats,\n            display_title=f\"{label}\\n({stats['node_count']} nodes)\",\n            size=3600 + stats[\"node_count\"] * 150,\n        )\n\n    edge_weights: dict[tuple[str, str], int] = defaultdict(int)\n    for source_id, target_id, edge_data in full_graph.edges(data=True):\n        if edge_data.get(\"relationship\") != \"CALLS\":\n            continue\n\n        source_file = full_graph.nodes[source_id].get(\"file_path\")\n        target_file = full_graph.nodes[target_id].get(\"file_path\")\n        if not source_file or not target_file or source_file == target_file:\n            continue\n\n        edge_weights[(source_file, target_file)] += 1\n\n    for (source_file, target_file), weight in edge_weights.items():\n        file_graph.add_edge(source_file, target_file, relationship=\"CALLS\", weight=weight)\n\n    return file_graph",
       "is_async": false,
       "decorators": []
     },
@@ -113,6 +134,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 104,
       "docstring": "Build a focused graph for a single file and its immediate relations.",
+      "source_code": "def build_file_detail_graph(full_graph: nx.MultiDiGraph, file_path: str, depth: int = 1) -> nx.MultiDiGraph:\n    \"\"\"Build a focused graph for a single file and its immediate relations.\"\"\"\n    detail_graph = nx.MultiDiGraph()\n\n    file_nodes = {\n        node_id\n        for node_id, data in full_graph.nodes(data=True)\n        if data.get(\"file_path\") == file_path\n    }\n\n    if not file_nodes:\n        return detail_graph\n\n    file_node_id = next(\n        (\n            node_id\n            for node_id, data in full_graph.nodes(data=True)\n            if data.get(\"type\") == \"File\" and data.get(\"file_path\") == file_path\n        ),\n        None,\n    )\n\n    included_nodes = set(file_nodes)\n    if file_node_id:\n        included_nodes.add(file_node_id)\n\n    frontier = set(file_nodes)\n    for _ in range(max(depth, 0)):\n        next_frontier = set()\n        for node_id in frontier:\n            neighbors = set(full_graph.predecessors(node_id)) | set(full_graph.successors(node_id))\n            for neighbor in neighbors:\n                edge_data_map = full_graph.get_edge_data(node_id, neighbor) or full_graph.get_edge_data(neighbor, node_id) or {}\n                relationship_types = {data.get(\"relationship\") for data in edge_data_map.values()}\n\n                if relationship_types & {\"CALLS\", \"CONTAINS\", \"INHERITS\", \"IMPORTS\", \"USES_VARIABLE\"}:\n                    if neighbor not in included_nodes:\n                        next_frontier.add(neighbor)\n                    included_nodes.add(neighbor)\n\n        frontier = next_frontier\n\n    for node_id in included_nodes:\n        detail_graph.add_node(node_id, **full_graph.nodes[node_id])\n\n    for source_id, target_id, edge_data in full_graph.edges(data=True):\n        if source_id in included_nodes and target_id in included_nodes:\n            detail_graph.add_edge(source_id, target_id, **edge_data)\n\n    return detail_graph",
       "is_async": false,
       "decorators": []
     },
@@ -123,6 +145,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 156,
       "docstring": "Desktop graph viewer with clickable nodes and a collapsible info panel.",
+      "source_code": "class GraphViewerApp:\n    \"\"\"Desktop graph viewer with clickable nodes and a collapsible info panel.\"\"\"\n\n    def __init__(self, repo_path: str):\n        self.repo_path = repo_path\n        self.root = tk.Tk()\n        self.root.title(\"CAESER Graph Viewer\")\n        self.root.geometry(\"1500x950\")\n\n        self.full_graph = self._build_full_graph(repo_path)\n        self.file_graph = build_file_level_graph(self.full_graph)\n\n        self.view_stack: list[ViewState] = []\n        self.current_view = ViewState(graph=self.file_graph, title=\"Tổng quan theo file\")\n        self.node_positions: dict[str, tuple[float, float]] = {}\n        self.node_sizes: dict[str, float] = {}\n        self.current_selection: str | None = None\n        self.panel_visible = True\n\n        self._build_layout()\n        self._render_current_view()\n\n    def _build_full_graph(self, repo_path: str) -> nx.MultiDiGraph:\n        from pathlib import Path\n        from extraction.resolver import ImportResolver\n        from extraction.models import GraphNode, GraphEdge\n        from typing import List\n\n        root = Path(repo_path).resolve()\n        print(f\"[*] Building interactive graph from {root}\")\n        files = [f for f in scan_py_files(str(root)) if Path(f).name != \"__init__.py\"]\n\n        all_nodes: List[GraphNode] = []\n        all_edges: List[GraphEdge] = []\n        for file_path in files:\n            try:\n                tree = parse_file(file_path)\n                nodes, edges = extract(tree, file_path)\n                all_nodes.extend(nodes)\n                all_edges.extend(edges)\n            except (SyntaxError, Exception):\n                pass\n\n        resolver = ImportResolver(str(root), all_nodes)\n        resolved_edges = resolver.resolve(all_edges)\n\n        mg = build_graph(all_nodes, resolved_edges)\n        print(f\"[+] Interactive graph ready: {len(mg.nodes)} nodes, {len(mg.edges)} edges\")\n        return mg\n\n    def _build_layout(self) -> None:\n        self.topbar = ttk.Frame(self.root, padding=(10, 10, 10, 0))\n        self.topbar.pack(side=tk.TOP, fill=tk.X)\n\n        self.title_label = ttk.Label(self.topbar, text=\"Tổng quan theo file\", font=(\"Segoe UI\", 16, \"bold\"))\n        self.title_label.pack(side=tk.LEFT)\n\n        self.toggle_button = ttk.Button(self.topbar, text=\"Ẩn bảng thông tin\", command=self.toggle_info_panel)\n        self.toggle_button.pack(side=tk.RIGHT)\n\n        self.back_button = ttk.Button(self.topbar, text=\"Quay lại\", command=self.go_back)\n        self.back_button.pack(side=tk.RIGHT, padx=(0, 10))\n\n        self.container = ttk.PanedWindow(self.root, orient=tk.HORIZONTAL)\n        self.container.pack(side=tk.TOP, fill=tk.BOTH, expand=True)\n\n        self.info_frame = ttk.Frame(self.container, padding=12)\n        self._build_info_panel(self.info_frame)\n        self.container.add(self.info_frame, weight=1)\n\n        self.canvas_frame = ttk.Frame(self.container, padding=12)\n        self.container.add(self.canvas_frame, weight=4)\n\n        self.figure = plt.Figure(figsize=(12, 8), dpi=100)\n        self.axis = self.figure.add_subplot(111)\n        self.axis.set_axis_off()\n\n        self.canvas = FigureCanvasTkAgg(self.figure, master=self.canvas_frame)\n        self.canvas_widget = self.canvas.get_tk_widget()\n        self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)\n\n        self.toolbar = NavigationToolbar2Tk(self.canvas, self.canvas_frame)\n        self.toolbar.update()\n\n        self.canvas.mpl_connect(\"button_press_event\", self._on_canvas_click)\n\n    def _build_info_panel(self, parent: ttk.Frame) -> None:\n        header = ttk.Label(parent, text=\"Thông tin node\", font=(\"Segoe UI\", 13, \"bold\"))\n        header.pack(anchor=tk.W, pady=(0, 10))\n\n        self.info_name = ttk.Label(parent, text=\"Tên: -\", wraplength=340)\n        self.info_name.pack(anchor=tk.W, pady=2)\n\n        self.info_type = ttk.Label(parent, text=\"Loại: -\")\n        self.info_type.pack(anchor=tk.W, pady=2)\n\n        self.info_file = ttk.Label(parent, text=\"File: -\", wraplength=340)\n        self.info_file.pack(anchor=tk.W, pady=2)\n\n        self.info_id = ttk.Label(parent, text=\"ID: -\", wraplength=340)\n        self.info_id.pack(anchor=tk.W, pady=2)\n\n        self.summary_label = ttk.Label(parent, text=\"Mô tả:\")\n        self.summary_label.pack(anchor=tk.W, pady=(10, 4))\n\n        self.summary_text = ScrolledText(parent, height=8, wrap=tk.WORD)\n        self.summary_text.pack(fill=tk.BOTH, expand=False)\n        self.summary_text.configure(state=\"disabled\")\n\n        self.code_label = ttk.Label(parent, text=\"Source code:\")\n        self.code_label.pack(anchor=tk.W, pady=(10, 4))\n\n        self.code_text = ScrolledText(parent, height=18, wrap=tk.NONE)\n        self.code_text.pack(fill=tk.BOTH, expand=True)\n        self.code_text.configure(state=\"disabled\")\n\n        self.hint_label = ttk.Label(\n            parent,\n            text=\"Click a file node to drill down. Click any node to inspect its details.\",\n            foreground=\"#555555\",\n            wraplength=340,\n        )\n        self.hint_label.pack(anchor=tk.W, pady=(10, 0))\n\n    def _set_text_widget(self, widget: ScrolledText, value: str) -> None:\n        widget.configure(state=\"normal\")\n        widget.delete(\"1.0\", tk.END)\n        widget.insert(tk.END, value or \"-\")\n        widget.configure(state=\"disabled\")\n\n    def _update_info_panel(self, node_id: str | None) -> None:\n        if not node_id or node_id not in self.current_view.graph:\n            self.info_name.configure(text=\"Tên: -\")\n            self.info_type.configure(text=\"Loại: -\")\n            self.info_file.configure(text=\"File: -\")\n            self.info_id.configure(text=\"ID: -\")\n            self._set_text_widget(self.summary_text, \"\")\n            self._set_text_widget(self.code_text, \"\")\n            return\n\n        data = self.current_view.graph.nodes[node_id]\n        file_path = data.get(\"file_path\") or \"-\"\n        content = data.get(\"content\", \"\")\n        source_code = data.get(\"source_code\", \"\")\n\n        self.info_name.configure(text=f\"Tên: {data.get('name', '-')}\")\n        self.info_type.configure(text=f\"Loại: {data.get('type', '-')}\")\n        self.info_file.configure(text=f\"File: {file_path}\")\n        self.info_id.configure(text=f\"ID: {node_id}\")\n        self._set_text_widget(self.summary_text, content or \"Không có mô tả.\")\n        self._set_text_widget(self.code_text, source_code or \"Không có source code.\")\n\n    def toggle_info_panel(self) -> None:\n        if self.panel_visible:\n            self.container.forget(self.info_frame)\n            self.toggle_button.configure(text=\"Hiện bảng thông tin\")\n        else:\n            self.container.insert(0, self.info_frame, weight=1)\n            self.toggle_button.configure(text=\"Ẩn bảng thông tin\")\n        self.panel_visible = not self.panel_visible\n\n    def go_back(self) -> None:\n        if not self.view_stack:\n            return\n\n        previous = self.view_stack.pop()\n        self.current_view = previous\n        self.current_selection = previous.selected_node_id\n        self._render_current_view()\n\n    def _render_current_view(self) -> None:\n        graph = self.current_view.graph\n        self.title_label.configure(text=self.current_view.title)\n        self.axis.clear()\n        self.axis.set_axis_off()\n\n        if len(graph.nodes) == 0:\n            self.axis.text(0.5, 0.5, \"No data available\", ha=\"center\", va=\"center\", fontsize=14)\n            self.canvas.draw_idle()\n            self._update_info_panel(None)\n            return\n\n        self.node_positions = nx.spring_layout(graph, seed=42, k=0.9 if len(graph.nodes) > 20 else 1.2)\n        self.node_sizes = {}\n\n        type_groups: dict[str, list[str]] = defaultdict(list)\n        for node_id, data in graph.nodes(data=True):\n            type_groups[data.get(\"type\", \"Unknown\")].append(node_id)\n\n        for node_type, node_ids in type_groups.items():\n            sizes = []\n            for node_id in node_ids:\n                data = graph.nodes[node_id]\n                if data.get(\"type\") == \"File\":\n                    size = data.get(\"size\", 3600)\n                elif data.get(\"type\") == \"Function\":\n                    size = 1500\n                elif data.get(\"type\") == \"Class\":\n                    size = 1700\n                else:\n                    size = 1100\n                self.node_sizes[node_id] = size\n                sizes.append(size)\n\n            nx.draw_networkx_nodes(\n                graph,\n                self.node_positions,\n                nodelist=node_ids,\n                node_size=sizes,\n                node_color=[_node_type_to_color(node_type)] * len(node_ids),\n                alpha=0.92,\n                ax=self.axis,\n            )\n\n        edge_groups: dict[str, list[tuple[str, str]]] = defaultdict(list)\n        for source_id, target_id, edge_data in graph.edges(data=True):\n            edge_groups[edge_data.get(\"relationship\", \"OTHER\")].append((source_id, target_id))\n\n        edge_styles = {\n            \"CALLS\": {\"color\": \"#ff9896\", \"style\": \"solid\", \"width\": 1.8},\n            \"CONTAINS\": {\"color\": \"#aec7e8\", \"style\": \"dashed\", \"width\": 1.0},\n            \"INHERITS\": {\"color\": \"#98df8a\", \"style\": \"solid\", \"width\": 1.4},\n            \"IMPORTS\": {\"color\": \"#c5b0d5\", \"style\": \"dotted\", \"width\": 1.0},\n            \"USES_VARIABLE\": {\"color\": \"#ffbb78\", \"style\": \"dotted\", \"width\": 1.0},\n        }\n\n        for relationship, edges in edge_groups.items():\n            style = edge_styles.get(relationship, {\"color\": \"#cccccc\", \"style\": \"solid\", \"width\": 0.8})\n            nx.draw_networkx_edges(\n                graph,\n                self.node_positions,\n                edgelist=edges,\n                edge_color=style[\"color\"],\n                style=style[\"style\"],\n                width=style[\"width\"],\n                arrows=True,\n                arrowsize=18,\n                connectionstyle=\"arc3,rad=0.08\",\n                ax=self.axis,\n            )\n\n        labels = {node_id: _node_label(node_id, data) for node_id, data in graph.nodes(data=True)}\n        nx.draw_networkx_labels(\n            graph,\n            self.node_positions,\n            labels=labels,\n            font_size=8,\n            font_weight=\"bold\",\n            font_family=\"sans-serif\",\n            ax=self.axis,\n        )\n\n        if self.current_selection in graph:\n            x, y = self.node_positions[self.current_selection]\n            highlight_size = self.node_sizes.get(self.current_selection, 1800) * 1.25\n            self.axis.scatter(\n                [x],\n                [y],\n                s=highlight_size,\n                facecolors=\"none\",\n                edgecolors=\"#000000\",\n                linewidths=2.2,\n                zorder=5,\n            )\n\n        self.axis.set_title(self.current_view.title, fontsize=16, pad=12)\n        self.figure.tight_layout()\n        self.canvas.draw_idle()\n        self._update_info_panel(self.current_selection)\n\n    def _on_canvas_click(self, event: Any) -> None:\n        if event.inaxes != self.axis:\n            return\n\n        node_id = self._find_node_at_position(event.xdata, event.ydata)\n        if not node_id:\n            return\n\n        self.current_selection = node_id\n        self._update_info_panel(node_id)\n\n        node_data = self.current_view.graph.nodes[node_id]\n        if node_data.get(\"type\") == \"File\" and self.current_view.file_path != node_data.get(\"file_path\"):\n            self._drill_into_file(node_data.get(\"file_path\", \"\"), selected_node_id=node_id)\n        else:\n            self._render_current_view()\n\n    def _find_node_at_position(self, x: float | None, y: float | None) -> str | None:\n        if x is None or y is None:\n            return None\n\n        best_node_id = None\n        best_distance = float(\"inf\")\n\n        for node_id, (nx_pos, ny_pos) in self.node_positions.items():\n            distance = ((x - nx_pos) ** 2 + (y - ny_pos) ** 2) ** 0.5\n            threshold = 0.08 + (self.node_sizes.get(node_id, 1200) / 12000.0)\n            if distance < threshold and distance < best_distance:\n                best_node_id = node_id\n                best_distance = distance\n\n        return best_node_id\n\n    def _drill_into_file(self, file_path: str, selected_node_id: str | None = None) -> None:\n        if not file_path:\n            return\n\n        detail_graph = build_file_detail_graph(self.full_graph, file_path=file_path, depth=1)\n        if len(detail_graph.nodes) == 0:\n            return\n\n        self.view_stack.append(self.current_view)\n        file_name = _safe_basename(file_path)\n        self.current_view = ViewState(\n            graph=detail_graph,\n            title=f\"Chi tiết file: {file_name}\",\n            selected_node_id=selected_node_id,\n            file_path=file_path,\n        )\n        self.current_selection = selected_node_id\n        self._render_current_view()\n\n    def run(self) -> None:\n        self.root.mainloop()",
       "is_async": false,
       "decorators": []
     },
@@ -133,6 +156,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 159,
       "docstring": null,
+      "source_code": "def __init__(self, repo_path: str):\n        self.repo_path = repo_path\n        self.root = tk.Tk()\n        self.root.title(\"CAESER Graph Viewer\")\n        self.root.geometry(\"1500x950\")\n\n        self.full_graph = self._build_full_graph(repo_path)\n        self.file_graph = build_file_level_graph(self.full_graph)\n\n        self.view_stack: list[ViewState] = []\n        self.current_view = ViewState(graph=self.file_graph, title=\"Tổng quan theo file\")\n        self.node_positions: dict[str, tuple[float, float]] = {}\n        self.node_sizes: dict[str, float] = {}\n        self.current_selection: str | None = None\n        self.panel_visible = True\n\n        self._build_layout()\n        self._render_current_view()",
       "is_async": false,
       "decorators": []
     },
@@ -143,6 +167,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 178,
       "docstring": null,
+      "source_code": "def _build_full_graph(self, repo_path: str) -> nx.MultiDiGraph:\n        from pathlib import Path\n        from extraction.resolver import ImportResolver\n        from extraction.models import GraphNode, GraphEdge\n        from typing import List\n\n        root = Path(repo_path).resolve()\n        print(f\"[*] Building interactive graph from {root}\")\n        files = [f for f in scan_py_files(str(root)) if Path(f).name != \"__init__.py\"]\n\n        all_nodes: List[GraphNode] = []\n        all_edges: List[GraphEdge] = []\n        for file_path in files:\n            try:\n                tree = parse_file(file_path)\n                nodes, edges = extract(tree, file_path)\n                all_nodes.extend(nodes)\n                all_edges.extend(edges)\n            except (SyntaxError, Exception):\n                pass\n\n        resolver = ImportResolver(str(root), all_nodes)\n        resolved_edges = resolver.resolve(all_edges)\n\n        mg = build_graph(all_nodes, resolved_edges)\n        print(f\"[+] Interactive graph ready: {len(mg.nodes)} nodes, {len(mg.edges)} edges\")\n        return mg",
       "is_async": false,
       "decorators": []
     },
@@ -153,6 +178,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 206,
       "docstring": null,
+      "source_code": "def _build_layout(self) -> None:\n        self.topbar = ttk.Frame(self.root, padding=(10, 10, 10, 0))\n        self.topbar.pack(side=tk.TOP, fill=tk.X)\n\n        self.title_label = ttk.Label(self.topbar, text=\"Tổng quan theo file\", font=(\"Segoe UI\", 16, \"bold\"))\n        self.title_label.pack(side=tk.LEFT)\n\n        self.toggle_button = ttk.Button(self.topbar, text=\"Ẩn bảng thông tin\", command=self.toggle_info_panel)\n        self.toggle_button.pack(side=tk.RIGHT)\n\n        self.back_button = ttk.Button(self.topbar, text=\"Quay lại\", command=self.go_back)\n        self.back_button.pack(side=tk.RIGHT, padx=(0, 10))\n\n        self.container = ttk.PanedWindow(self.root, orient=tk.HORIZONTAL)\n        self.container.pack(side=tk.TOP, fill=tk.BOTH, expand=True)\n\n        self.info_frame = ttk.Frame(self.container, padding=12)\n        self._build_info_panel(self.info_frame)\n        self.container.add(self.info_frame, weight=1)\n\n        self.canvas_frame = ttk.Frame(self.container, padding=12)\n        self.container.add(self.canvas_frame, weight=4)\n\n        self.figure = plt.Figure(figsize=(12, 8), dpi=100)\n        self.axis = self.figure.add_subplot(111)\n        self.axis.set_axis_off()\n\n        self.canvas = FigureCanvasTkAgg(self.figure, master=self.canvas_frame)\n        self.canvas_widget = self.canvas.get_tk_widget()\n        self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)\n\n        self.toolbar = NavigationToolbar2Tk(self.canvas, self.canvas_frame)\n        self.toolbar.update()\n\n        self.canvas.mpl_connect(\"button_press_event\", self._on_canvas_click)",
       "is_async": false,
       "decorators": []
     },
@@ -163,6 +189,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 242,
       "docstring": null,
+      "source_code": "def _build_info_panel(self, parent: ttk.Frame) -> None:\n        header = ttk.Label(parent, text=\"Thông tin node\", font=(\"Segoe UI\", 13, \"bold\"))\n        header.pack(anchor=tk.W, pady=(0, 10))\n\n        self.info_name = ttk.Label(parent, text=\"Tên: -\", wraplength=340)\n        self.info_name.pack(anchor=tk.W, pady=2)\n\n        self.info_type = ttk.Label(parent, text=\"Loại: -\")\n        self.info_type.pack(anchor=tk.W, pady=2)\n\n        self.info_file = ttk.Label(parent, text=\"File: -\", wraplength=340)\n        self.info_file.pack(anchor=tk.W, pady=2)\n\n        self.info_id = ttk.Label(parent, text=\"ID: -\", wraplength=340)\n        self.info_id.pack(anchor=tk.W, pady=2)\n\n        self.summary_label = ttk.Label(parent, text=\"Mô tả:\")\n        self.summary_label.pack(anchor=tk.W, pady=(10, 4))\n\n        self.summary_text = ScrolledText(parent, height=8, wrap=tk.WORD)\n        self.summary_text.pack(fill=tk.BOTH, expand=False)\n        self.summary_text.configure(state=\"disabled\")\n\n        self.code_label = ttk.Label(parent, text=\"Source code:\")\n        self.code_label.pack(anchor=tk.W, pady=(10, 4))\n\n        self.code_text = ScrolledText(parent, height=18, wrap=tk.NONE)\n        self.code_text.pack(fill=tk.BOTH, expand=True)\n        self.code_text.configure(state=\"disabled\")\n\n        self.hint_label = ttk.Label(\n            parent,\n            text=\"Click a file node to drill down. Click any node to inspect its details.\",\n            foreground=\"#555555\",\n            wraplength=340,\n        )\n        self.hint_label.pack(anchor=tk.W, pady=(10, 0))",
       "is_async": false,
       "decorators": []
     },
@@ -173,6 +200,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 280,
       "docstring": null,
+      "source_code": "def _set_text_widget(self, widget: ScrolledText, value: str) -> None:\n        widget.configure(state=\"normal\")\n        widget.delete(\"1.0\", tk.END)\n        widget.insert(tk.END, value or \"-\")\n        widget.configure(state=\"disabled\")",
       "is_async": false,
       "decorators": []
     },
@@ -183,6 +211,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 286,
       "docstring": null,
+      "source_code": "def _update_info_panel(self, node_id: str | None) -> None:\n        if not node_id or node_id not in self.current_view.graph:\n            self.info_name.configure(text=\"Tên: -\")\n            self.info_type.configure(text=\"Loại: -\")\n            self.info_file.configure(text=\"File: -\")\n            self.info_id.configure(text=\"ID: -\")\n            self._set_text_widget(self.summary_text, \"\")\n            self._set_text_widget(self.code_text, \"\")\n            return\n\n        data = self.current_view.graph.nodes[node_id]\n        file_path = data.get(\"file_path\") or \"-\"\n        content = data.get(\"content\", \"\")\n        source_code = data.get(\"source_code\", \"\")\n\n        self.info_name.configure(text=f\"Tên: {data.get('name', '-')}\")\n        self.info_type.configure(text=f\"Loại: {data.get('type', '-')}\")\n        self.info_file.configure(text=f\"File: {file_path}\")\n        self.info_id.configure(text=f\"ID: {node_id}\")\n        self._set_text_widget(self.summary_text, content or \"Không có mô tả.\")\n        self._set_text_widget(self.code_text, source_code or \"Không có source code.\")",
       "is_async": false,
       "decorators": []
     },
@@ -193,6 +222,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 308,
       "docstring": null,
+      "source_code": "def toggle_info_panel(self) -> None:\n        if self.panel_visible:\n            self.container.forget(self.info_frame)\n            self.toggle_button.configure(text=\"Hiện bảng thông tin\")\n        else:\n            self.container.insert(0, self.info_frame, weight=1)\n            self.toggle_button.configure(text=\"Ẩn bảng thông tin\")\n        self.panel_visible = not self.panel_visible",
       "is_async": false,
       "decorators": []
     },
@@ -203,6 +233,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 317,
       "docstring": null,
+      "source_code": "def go_back(self) -> None:\n        if not self.view_stack:\n            return\n\n        previous = self.view_stack.pop()\n        self.current_view = previous\n        self.current_selection = previous.selected_node_id\n        self._render_current_view()",
       "is_async": false,
       "decorators": []
     },
@@ -213,6 +244,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 326,
       "docstring": null,
+      "source_code": "def _render_current_view(self) -> None:\n        graph = self.current_view.graph\n        self.title_label.configure(text=self.current_view.title)\n        self.axis.clear()\n        self.axis.set_axis_off()\n\n        if len(graph.nodes) == 0:\n            self.axis.text(0.5, 0.5, \"No data available\", ha=\"center\", va=\"center\", fontsize=14)\n            self.canvas.draw_idle()\n            self._update_info_panel(None)\n            return\n\n        self.node_positions = nx.spring_layout(graph, seed=42, k=0.9 if len(graph.nodes) > 20 else 1.2)\n        self.node_sizes = {}\n\n        type_groups: dict[str, list[str]] = defaultdict(list)\n        for node_id, data in graph.nodes(data=True):\n            type_groups[data.get(\"type\", \"Unknown\")].append(node_id)\n\n        for node_type, node_ids in type_groups.items():\n            sizes = []\n            for node_id in node_ids:\n                data = graph.nodes[node_id]\n                if data.get(\"type\") == \"File\":\n                    size = data.get(\"size\", 3600)\n                elif data.get(\"type\") == \"Function\":\n                    size = 1500\n                elif data.get(\"type\") == \"Class\":\n                    size = 1700\n                else:\n                    size = 1100\n                self.node_sizes[node_id] = size\n                sizes.append(size)\n\n            nx.draw_networkx_nodes(\n                graph,\n                self.node_positions,\n                nodelist=node_ids,\n                node_size=sizes,\n                node_color=[_node_type_to_color(node_type)] * len(node_ids),\n                alpha=0.92,\n                ax=self.axis,\n            )\n\n        edge_groups: dict[str, list[tuple[str, str]]] = defaultdict(list)\n        for source_id, target_id, edge_data in graph.edges(data=True):\n            edge_groups[edge_data.get(\"relationship\", \"OTHER\")].append((source_id, target_id))\n\n        edge_styles = {\n            \"CALLS\": {\"color\": \"#ff9896\", \"style\": \"solid\", \"width\": 1.8},\n            \"CONTAINS\": {\"color\": \"#aec7e8\", \"style\": \"dashed\", \"width\": 1.0},\n            \"INHERITS\": {\"color\": \"#98df8a\", \"style\": \"solid\", \"width\": 1.4},\n            \"IMPORTS\": {\"color\": \"#c5b0d5\", \"style\": \"dotted\", \"width\": 1.0},\n            \"USES_VARIABLE\": {\"color\": \"#ffbb78\", \"style\": \"dotted\", \"width\": 1.0},\n        }\n\n        for relationship, edges in edge_groups.items():\n            style = edge_styles.get(relationship, {\"color\": \"#cccccc\", \"style\": \"solid\", \"width\": 0.8})\n            nx.draw_networkx_edges(\n                graph,\n                self.node_positions,\n                edgelist=edges,\n                edge_color=style[\"color\"],\n                style=style[\"style\"],\n                width=style[\"width\"],\n                arrows=True,\n                arrowsize=18,\n                connectionstyle=\"arc3,rad=0.08\",\n                ax=self.axis,\n            )\n\n        labels = {node_id: _node_label(node_id, data) for node_id, data in graph.nodes(data=True)}\n        nx.draw_networkx_labels(\n            graph,\n            self.node_positions,\n            labels=labels,\n            font_size=8,\n            font_weight=\"bold\",\n            font_family=\"sans-serif\",\n            ax=self.axis,\n        )\n\n        if self.current_selection in graph:\n            x, y = self.node_positions[self.current_selection]\n            highlight_size = self.node_sizes.get(self.current_selection, 1800) * 1.25\n            self.axis.scatter(\n                [x],\n                [y],\n                s=highlight_size,\n                facecolors=\"none\",\n                edgecolors=\"#000000\",\n                linewidths=2.2,\n                zorder=5,\n            )\n\n        self.axis.set_title(self.current_view.title, fontsize=16, pad=12)\n        self.figure.tight_layout()\n        self.canvas.draw_idle()\n        self._update_info_panel(self.current_selection)",
       "is_async": false,
       "decorators": []
     },
@@ -223,6 +255,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 426,
       "docstring": null,
+      "source_code": "def _on_canvas_click(self, event: Any) -> None:\n        if event.inaxes != self.axis:\n            return\n\n        node_id = self._find_node_at_position(event.xdata, event.ydata)\n        if not node_id:\n            return\n\n        self.current_selection = node_id\n        self._update_info_panel(node_id)\n\n        node_data = self.current_view.graph.nodes[node_id]\n        if node_data.get(\"type\") == \"File\" and self.current_view.file_path != node_data.get(\"file_path\"):\n            self._drill_into_file(node_data.get(\"file_path\", \"\"), selected_node_id=node_id)\n        else:\n            self._render_current_view()",
       "is_async": false,
       "decorators": []
     },
@@ -233,6 +266,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 443,
       "docstring": null,
+      "source_code": "def _find_node_at_position(self, x: float | None, y: float | None) -> str | None:\n        if x is None or y is None:\n            return None\n\n        best_node_id = None\n        best_distance = float(\"inf\")\n\n        for node_id, (nx_pos, ny_pos) in self.node_positions.items():\n            distance = ((x - nx_pos) ** 2 + (y - ny_pos) ** 2) ** 0.5\n            threshold = 0.08 + (self.node_sizes.get(node_id, 1200) / 12000.0)\n            if distance < threshold and distance < best_distance:\n                best_node_id = node_id\n                best_distance = distance\n\n        return best_node_id",
       "is_async": false,
       "decorators": []
     },
@@ -243,6 +277,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 459,
       "docstring": null,
+      "source_code": "def _drill_into_file(self, file_path: str, selected_node_id: str | None = None) -> None:\n        if not file_path:\n            return\n\n        detail_graph = build_file_detail_graph(self.full_graph, file_path=file_path, depth=1)\n        if len(detail_graph.nodes) == 0:\n            return\n\n        self.view_stack.append(self.current_view)\n        file_name = _safe_basename(file_path)\n        self.current_view = ViewState(\n            graph=detail_graph,\n            title=f\"Chi tiết file: {file_name}\",\n            selected_node_id=selected_node_id,\n            file_path=file_path,\n        )\n        self.current_selection = selected_node_id\n        self._render_current_view()",
       "is_async": false,
       "decorators": []
     },
@@ -253,6 +288,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 478,
       "docstring": null,
+      "source_code": "def run(self) -> None:\n        self.root.mainloop()",
       "is_async": false,
       "decorators": []
     },
@@ -263,6 +299,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py",
       "line_start": 482,
       "docstring": "Launch the local desktop graph viewer.",
+      "source_code": "def launch_graph_viewer(repo_path: str) -> None:\n    \"\"\"Launch the local desktop graph viewer.\"\"\"\n    app = GraphViewerApp(repo_path)\n    app.run()",
       "is_async": false,
       "decorators": []
     },
@@ -273,6 +310,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/main.py",
       "line_start": 1,
       "docstring": null,
+      "source_code": null,
       "is_async": false,
       "decorators": []
     },
@@ -283,6 +321,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/main.py",
       "line_start": 22,
       "docstring": null,
+      "source_code": "def run(repo_path: str):\n    root = Path(repo_path).resolve()\n    files = [f for f in scan_py_files(str(root)) if Path(f).name != \"__init__.py\"]\n    if not files:\n        print(\"[-] No Python files found.\")\n        return\n\n    all_nodes: List[GraphNode] = []\n    all_edges: List[GraphEdge] = []\n    print(f\"[*] Extracting {len(files)} files from {root}...\")\n    for f in files:\n        try:\n            tree = parse_file(f)\n            nodes, edges = extract(tree, f)\n            all_nodes.extend(nodes)\n            all_edges.extend(edges)\n        except (SyntaxError, Exception) as e:\n            print(f\"[-] Skipping {f}: {e}\")\n\n    print(\"[*] Resolving references...\")\n    resolver = ImportResolver(str(root), all_nodes)\n    resolved_edges = resolver.resolve(all_edges)\n\n    graph = build_graph(all_nodes, resolved_edges)\n    print(f\"[+] Nodes: {len(graph.nodes)} | Edges: {len(graph.edges)}\")",
       "is_async": false,
       "decorators": []
     },
@@ -293,66 +332,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/app/main.py",
       "line_start": 49,
       "docstring": null,
-      "is_async": false,
-      "decorators": []
-    },
-    {
-      "id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
-      "name": "test_attr",
-      "type": "Module",
-      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
-      "line_start": 1,
-      "docstring": null,
-      "is_async": false,
-      "decorators": []
-    },
-    {
-      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::a",
-      "name": "a",
-      "type": "Function",
-      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
-      "line_start": 3,
-      "docstring": null,
-      "is_async": false,
-      "decorators": []
-    },
-    {
-      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::b",
-      "name": "b",
-      "type": "Function",
-      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
-      "line_start": 7,
-      "docstring": null,
-      "is_async": false,
-      "decorators": []
-    },
-    {
-      "id": "class:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::User",
-      "name": "User",
-      "type": "Class",
-      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
-      "line_start": 10,
-      "docstring": null,
-      "is_async": false,
-      "decorators": []
-    },
-    {
-      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::User::save",
-      "name": "save",
-      "type": "Function",
-      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
-      "line_start": 11,
-      "docstring": null,
-      "is_async": false,
-      "decorators": []
-    },
-    {
-      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::c",
-      "name": "c",
-      "type": "Function",
-      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
-      "line_start": 14,
-      "docstring": null,
+      "source_code": "def main():\n    parser = argparse.ArgumentParser(description=\"Caeser project analyzer\")\n    parser.add_argument(\"repo_path\", nargs=\"?\", default=\".\", help=\"Repository path\")\n    parser.add_argument(\"--viewer\", action=\"store_true\", help=\"Open graph viewer\")\n    args = parser.parse_args()\n\n    if args.viewer:\n        launch_graph_viewer(args.repo_path)\n        return\n\n    run(args.repo_path)",
       "is_async": false,
       "decorators": []
     },
@@ -363,6 +343,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/explain/formatter.py",
       "line_start": 1,
       "docstring": null,
+      "source_code": null,
       "is_async": false,
       "decorators": []
     },
@@ -373,6 +354,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/explain/formatter.py",
       "line_start": 6,
       "docstring": null,
+      "source_code": "def explain_function(graph: nx.DiGraph, func_name: str) -> str:\n    # Build the recursive call chain and format it as a tree\n    chain = get_call_chain(graph, func_name, depth=3)\n    return format_call_chain(chain)",
       "is_async": false,
       "decorators": []
     },
@@ -383,6 +365,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/export/obsidian.py",
       "line_start": 1,
       "docstring": null,
+      "source_code": null,
       "is_async": false,
       "decorators": []
     },
@@ -391,8 +374,9 @@
       "name": "_safe",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/export/obsidian.py",
-      "line_start": 8,
+      "line_start": 9,
       "docstring": null,
+      "source_code": "def _safe(name: str) -> str:\n    return _UNSAFE.sub(\"_\", name)",
       "is_async": false,
       "decorators": []
     },
@@ -401,8 +385,9 @@
       "name": "_wikilink",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/export/obsidian.py",
-      "line_start": 12,
+      "line_start": 13,
       "docstring": null,
+      "source_code": "def _wikilink(node: dict) -> str:\n    # Obsidian match wikilink theo filename, không phải node ID\n    # nên dùng name (= tên file .md) thay vì id\n    return f\"[[{_safe(node['name'])}]]\"",
       "is_async": false,
       "decorators": []
     },
@@ -411,8 +396,9 @@
       "name": "export",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/export/obsidian.py",
-      "line_start": 16,
+      "line_start": 19,
       "docstring": null,
+      "source_code": "def export(graph_path: str, vault_path: str) -> None:\n    graph = json.loads(Path(graph_path).read_text(encoding=\"utf-8\"))\n    project_name = graph[\"project\"]\n    nodes = {n[\"id\"]: n for n in graph[\"nodes\"]}\n\n    # Chỉ build adjacency cho edges đã resolved (confidence > 0.0)\n    # Edge confidence=0.0 là external lib hoặc ambiguous — tạo wikilink gãy nếu giữ lại\n    outgoing: dict[str, list[dict]] = {nid: [] for nid in nodes}\n    incoming: dict[str, list[dict]] = {nid: [] for nid in nodes}\n    for edge in graph[\"edges\"]:\n        if edge[\"confidence\"] > 0.0:\n            src, tgt = edge[\"source_id\"], edge[\"target_id\"]\n            if src in outgoing and tgt in incoming:\n                outgoing[src].append(edge)\n                incoming[tgt].append(edge)\n\n    vault_root = Path(vault_path) / _safe(project_name)\n    for subdir in (\"modules\", \"classes\", \"functions\"):\n        (vault_root / subdir).mkdir(parents=True, exist_ok=True)\n\n    count = 0\n    for node_id, node in nodes.items():\n        content = _render(node, nodes, outgoing, incoming)\n        subdir = {\"Module\": \"modules\", \"Class\": \"classes\", \"Function\": \"functions\"}.get(node[\"type\"], \"misc\")\n        out_file = vault_root / subdir / (_safe(node[\"name\"]) + \".md\")\n        out_file.write_text(content, encoding=\"utf-8\")\n        count += 1\n\n    print(f\"[+] Obsidian vault -> {vault_root}\")\n    print(f\"    Files: {count}\")",
       "is_async": false,
       "decorators": []
     },
@@ -421,8 +407,9 @@
       "name": "_render",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/export/obsidian.py",
-      "line_start": 47,
+      "line_start": 51,
       "docstring": null,
+      "source_code": "def _render(node, nodes, outgoing, incoming) -> str:\n    t = node[\"type\"]\n    if t == \"Module\":\n        return _module(node, nodes, outgoing, incoming)\n    if t == \"Class\":\n        return _class(node, nodes, outgoing, incoming)\n    if t == \"Function\":\n        return _function(node, nodes, outgoing, incoming)\n    return \"\"",
       "is_async": false,
       "decorators": []
     },
@@ -431,8 +418,9 @@
       "name": "_edges_of",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/export/obsidian.py",
-      "line_start": 58,
+      "line_start": 62,
       "docstring": null,
+      "source_code": "def _edges_of(nid, adj, edge_type):\n    return [e for e in adj.get(nid, []) if e[\"type\"] == edge_type]",
       "is_async": false,
       "decorators": []
     },
@@ -441,8 +429,9 @@
       "name": "_targets",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/export/obsidian.py",
-      "line_start": 62,
+      "line_start": 66,
       "docstring": null,
+      "source_code": "def _targets(edges, nodes):\n    return [nodes[e[\"target_id\"]] for e in edges if e[\"target_id\"] in nodes]",
       "is_async": false,
       "decorators": []
     },
@@ -451,8 +440,9 @@
       "name": "_sources",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/export/obsidian.py",
-      "line_start": 66,
+      "line_start": 70,
       "docstring": null,
+      "source_code": "def _sources(edges, nodes):\n    return [nodes[e[\"source_id\"]] for e in edges if e[\"source_id\"] in nodes]",
       "is_async": false,
       "decorators": []
     },
@@ -461,8 +451,9 @@
       "name": "_module",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/export/obsidian.py",
-      "line_start": 70,
+      "line_start": 74,
       "docstring": null,
+      "source_code": "def _module(node, nodes, outgoing, incoming) -> str:\n    nid = node[\"id\"]\n    lines = [f\"# {node['name']}\", f\"**Type:** Module\", f\"**File:** `{node['file_path']}`\", \"\"]\n\n    imports = _targets(_edges_of(nid, outgoing, \"IMPORTS\"), nodes)\n    if imports:\n        lines += [\"## Imports\"] + [f\"- {_wikilink(n)}\" for n in imports] + [\"\"]\n\n    defines = _edges_of(nid, outgoing, \"DEFINES\")\n    classes = [nodes[e[\"target_id\"]] for e in defines if e[\"target_id\"] in nodes and nodes[e[\"target_id\"]][\"type\"] == \"Class\"]\n    funcs   = [nodes[e[\"target_id\"]] for e in defines if e[\"target_id\"] in nodes and nodes[e[\"target_id\"]][\"type\"] == \"Function\"]\n\n    if classes:\n        lines += [\"## Classes\"] + [f\"- {_wikilink(c)}\" for c in classes] + [\"\"]\n    if funcs:\n        lines += [\"## Functions\"] + [f\"- {_wikilink(f)}\" for f in funcs] + [\"\"]\n\n    imported_by = _sources(_edges_of(nid, incoming, \"IMPORTS\"), nodes)\n    if imported_by:\n        lines += [\"## Imported by\"] + [f\"- {_wikilink(m)}\" for m in imported_by] + [\"\"]\n\n    return \"\\n\".join(lines)",
       "is_async": false,
       "decorators": []
     },
@@ -471,8 +462,9 @@
       "name": "_class",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/export/obsidian.py",
-      "line_start": 94,
+      "line_start": 98,
       "docstring": null,
+      "source_code": "def _class(node, nodes, outgoing, incoming) -> str:\n    nid = node[\"id\"]\n    lines = [\n        f\"# {node['name']}\",\n        f\"**Type:** Class\",\n        f\"**File:** `{node['file_path']}`\",\n        f\"**Line:** {node['line_start']}\",\n        \"\",\n    ]\n\n    if node.get(\"docstring\"):\n        lines += [\"## Docstring\", node[\"docstring\"], \"\"]\n\n    methods = _targets(_edges_of(nid, outgoing, \"CONTAINS\"), nodes)\n    if methods:\n        lines += [\"## Methods\"] + [f\"- {_wikilink(m)}\" for m in methods] + [\"\"]\n\n    inherits = _targets(_edges_of(nid, outgoing, \"INHERITS\"), nodes)\n    if inherits:\n        lines += [\"## Inherits\"] + [f\"- {_wikilink(b)}\" for b in inherits] + [\"\"]\n\n    defined_in = _sources(_edges_of(nid, incoming, \"DEFINES\"), nodes)\n    if defined_in:\n        lines += [\"## Defined in\"] + [f\"- {_wikilink(m)}\" for m in defined_in] + [\"\"]\n\n    return \"\\n\".join(lines)",
       "is_async": false,
       "decorators": []
     },
@@ -481,8 +473,9 @@
       "name": "_function",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/export/obsidian.py",
-      "line_start": 122,
+      "line_start": 126,
       "docstring": null,
+      "source_code": "def _function(node, nodes, outgoing, incoming) -> str:\n    nid = node[\"id\"]\n    type_label = \"Async Function\" if node.get(\"is_async\") else \"Function\"\n    lines = [\n        f\"# {node['name']}\",\n        f\"**Type:** {type_label}\",\n        f\"**File:** `{node['file_path']}`\",\n        f\"**Line:** {node['line_start']}\",\n    ]\n    if node.get(\"decorators\"):\n        lines.append(f\"**Decorators:** {', '.join(node['decorators'])}\")\n    lines.append(\"\")\n\n    if node.get(\"docstring\"):\n        lines += [\"## Docstring\", node[\"docstring\"], \"\"]\n\n    # Kiểm tra CONTAINS trước DEFINES để method hiện \"Class\" thay vì \"Module\"\n    for etype, label in ((\"CONTAINS\", \"Class\"), (\"DEFINES\", \"Module\")):\n        containers = _sources(_edges_of(nid, incoming, etype), nodes)\n        if containers:\n            lines += [f\"## {label}\"] + [f\"- {_wikilink(c)}\" for c in containers] + [\"\"]\n            break\n\n    calls = _targets(_edges_of(nid, outgoing, \"CALLS\"), nodes)\n    if calls:\n        lines += [\"## Calls\"] + [f\"- {_wikilink(c)}\" for c in calls] + [\"\"]\n\n    callers = _sources(_edges_of(nid, incoming, \"CALLS\"), nodes)\n    if callers:\n        lines += [\"## Called by\"] + [f\"- {_wikilink(c)}\" for c in callers] + [\"\"]\n\n    return \"\\n\".join(lines)",
       "is_async": false,
       "decorators": []
     },
@@ -493,6 +486,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py",
       "line_start": 1,
       "docstring": null,
+      "source_code": null,
       "is_async": false,
       "decorators": []
     },
@@ -503,6 +497,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py",
       "line_start": 8,
       "docstring": null,
+      "source_code": "def extract(tree: ast.AST, file_path: str, source: str = \"\") -> Tuple[List[GraphNode], List[GraphEdge]]:\n    visitor = _Extractor(file_path, source)\n    visitor.visit(tree)\n    return visitor.nodes, visitor.edges",
       "is_async": false,
       "decorators": []
     },
@@ -513,6 +508,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py",
       "line_start": 14,
       "docstring": null,
+      "source_code": "class _Extractor(ast.NodeVisitor):\n    def __init__(self, file_path: str, source: str = \"\"):\n        # Chuẩn hóa về forward slash để node ID nhất quán trên Windows/Linux\n        self.file_path = Path(file_path).as_posix()\n        self.source = source\n        self.nodes: List[GraphNode] = []\n        self.edges: List[GraphEdge] = []\n\n        # Lưu class đang xử lý để phân biệt method (CONTAINS) với top-level func (DEFINES)\n        self._current_class_id: Optional[str] = None\n        self._current_class_name: Optional[str] = None\n\n        stem = Path(file_path).stem\n        self.module_id = f\"module:{self.file_path}\"\n        self.nodes.append(GraphNode(\n            id=self.module_id,\n            name=stem,\n            type=NodeType.MODULE,\n            file_path=self.file_path,\n            line_start=1,\n        ))\n\n    def visit_Import(self, node: ast.Import):\n        for alias in node.names:\n            # confidence=0.0 vì chưa biết đây là module nội bộ hay thư viện ngoài\n            # resolver sẽ nâng confidence lên 1.0 nếu tìm thấy trong project\n            self.edges.append(GraphEdge(\n                type=EdgeType.IMPORTS,\n                source_id=self.module_id,\n                target_id=f\"dep:{alias.name}\",\n                confidence=0.0,\n            ))\n\n    def visit_ImportFrom(self, node: ast.ImportFrom):\n        if node.module:\n            self.edges.append(GraphEdge(\n                type=EdgeType.IMPORTS,\n                source_id=self.module_id,\n                target_id=f\"dep:{node.module}\",\n                confidence=0.0,\n            ))\n\n    def visit_ClassDef(self, node: ast.ClassDef):\n        class_id = f\"class:{self.file_path}::{node.name}\"\n        self.nodes.append(GraphNode(\n            id=class_id,\n            name=node.name,\n            type=NodeType.CLASS,\n            file_path=self.file_path,\n            line_start=node.lineno,\n            docstring=ast.get_docstring(node),\n            source_code=ast.get_source_segment(self.source, node) if self.source else None,\n            decorators=[_decorator_name(d) for d in node.decorator_list],\n        ))\n        self.edges.append(GraphEdge(\n            type=EdgeType.DEFINES,\n            source_id=self.module_id,\n            target_id=class_id,\n            confidence=1.0,\n        ))\n        for base in node.bases:\n            base_name = _resolve_name(base)\n            if base_name:\n                # class_ref: là ghost ID — resolver sẽ map về class node thật\n                self.edges.append(GraphEdge(\n                    type=EdgeType.INHERITS,\n                    source_id=class_id,\n                    target_id=f\"class_ref:{base_name}\",\n                    confidence=0.0,\n                ))\n\n        # Set context trước khi đệ quy để các method bên trong biết mình thuộc class nào\n        prev_id, prev_name = self._current_class_id, self._current_class_name\n        self._current_class_id = class_id\n        self._current_class_name = node.name\n        self.generic_visit(node)\n        self._current_class_id = prev_id\n        self._current_class_name = prev_name\n\n    def visit_FunctionDef(self, node: ast.FunctionDef):\n        self._handle_function(node, is_async=False)\n\n    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):\n        self._handle_function(node, is_async=True)\n\n    def _handle_function(self, node, is_async: bool):\n        if self._current_class_id:\n            # Method: ID bao gồm tên class để tránh trùng với top-level func cùng tên\n            func_id = f\"func:{self.file_path}::{self._current_class_name}::{node.name}\"\n            container_id = self._current_class_id\n            edge_type = EdgeType.CONTAINS\n        else:\n            func_id = f\"func:{self.file_path}::{node.name}\"\n            container_id = self.module_id\n            edge_type = EdgeType.DEFINES\n\n        self.nodes.append(GraphNode(\n            id=func_id,\n            name=node.name,\n            type=NodeType.FUNCTION,\n            file_path=self.file_path,\n            line_start=node.lineno,\n            docstring=ast.get_docstring(node),\n            source_code=ast.get_source_segment(self.source, node) if self.source else None,\n            is_async=is_async,\n            decorators=[_decorator_name(d) for d in node.decorator_list],\n        ))\n        self.edges.append(GraphEdge(\n            type=edge_type,\n            source_id=container_id,\n            target_id=func_id,\n            confidence=1.0,\n        ))\n        for call_name in _collect_calls(node):\n            # func_ref: là ghost ID — resolver sẽ cố map về func node thật (best-effort)\n            self.edges.append(GraphEdge(\n                type=EdgeType.CALLS,\n                source_id=func_id,\n                target_id=f\"func_ref:{call_name}\",\n                confidence=0.0,\n            ))",
       "is_async": false,
       "decorators": []
     },
@@ -523,6 +519,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py",
       "line_start": 15,
       "docstring": null,
+      "source_code": "def __init__(self, file_path: str, source: str = \"\"):\n        # Chuẩn hóa về forward slash để node ID nhất quán trên Windows/Linux\n        self.file_path = Path(file_path).as_posix()\n        self.source = source\n        self.nodes: List[GraphNode] = []\n        self.edges: List[GraphEdge] = []\n\n        # Lưu class đang xử lý để phân biệt method (CONTAINS) với top-level func (DEFINES)\n        self._current_class_id: Optional[str] = None\n        self._current_class_name: Optional[str] = None\n\n        stem = Path(file_path).stem\n        self.module_id = f\"module:{self.file_path}\"\n        self.nodes.append(GraphNode(\n            id=self.module_id,\n            name=stem,\n            type=NodeType.MODULE,\n            file_path=self.file_path,\n            line_start=1,\n        ))",
       "is_async": false,
       "decorators": []
     },
@@ -531,8 +528,9 @@
       "name": "visit_Import",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py",
-      "line_start": 33,
+      "line_start": 36,
       "docstring": null,
+      "source_code": "def visit_Import(self, node: ast.Import):\n        for alias in node.names:\n            # confidence=0.0 vì chưa biết đây là module nội bộ hay thư viện ngoài\n            # resolver sẽ nâng confidence lên 1.0 nếu tìm thấy trong project\n            self.edges.append(GraphEdge(\n                type=EdgeType.IMPORTS,\n                source_id=self.module_id,\n                target_id=f\"dep:{alias.name}\",\n                confidence=0.0,\n            ))",
       "is_async": false,
       "decorators": []
     },
@@ -541,8 +539,9 @@
       "name": "visit_ImportFrom",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py",
-      "line_start": 42,
+      "line_start": 47,
       "docstring": null,
+      "source_code": "def visit_ImportFrom(self, node: ast.ImportFrom):\n        if node.module:\n            self.edges.append(GraphEdge(\n                type=EdgeType.IMPORTS,\n                source_id=self.module_id,\n                target_id=f\"dep:{node.module}\",\n                confidence=0.0,\n            ))",
       "is_async": false,
       "decorators": []
     },
@@ -551,8 +550,9 @@
       "name": "visit_ClassDef",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py",
-      "line_start": 51,
+      "line_start": 56,
       "docstring": null,
+      "source_code": "def visit_ClassDef(self, node: ast.ClassDef):\n        class_id = f\"class:{self.file_path}::{node.name}\"\n        self.nodes.append(GraphNode(\n            id=class_id,\n            name=node.name,\n            type=NodeType.CLASS,\n            file_path=self.file_path,\n            line_start=node.lineno,\n            docstring=ast.get_docstring(node),\n            source_code=ast.get_source_segment(self.source, node) if self.source else None,\n            decorators=[_decorator_name(d) for d in node.decorator_list],\n        ))\n        self.edges.append(GraphEdge(\n            type=EdgeType.DEFINES,\n            source_id=self.module_id,\n            target_id=class_id,\n            confidence=1.0,\n        ))\n        for base in node.bases:\n            base_name = _resolve_name(base)\n            if base_name:\n                # class_ref: là ghost ID — resolver sẽ map về class node thật\n                self.edges.append(GraphEdge(\n                    type=EdgeType.INHERITS,\n                    source_id=class_id,\n                    target_id=f\"class_ref:{base_name}\",\n                    confidence=0.0,\n                ))\n\n        # Set context trước khi đệ quy để các method bên trong biết mình thuộc class nào\n        prev_id, prev_name = self._current_class_id, self._current_class_name\n        self._current_class_id = class_id\n        self._current_class_name = node.name\n        self.generic_visit(node)\n        self._current_class_id = prev_id\n        self._current_class_name = prev_name",
       "is_async": false,
       "decorators": []
     },
@@ -561,8 +561,9 @@
       "name": "visit_FunctionDef",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py",
-      "line_start": 85,
+      "line_start": 93,
       "docstring": null,
+      "source_code": "def visit_FunctionDef(self, node: ast.FunctionDef):\n        self._handle_function(node, is_async=False)",
       "is_async": false,
       "decorators": []
     },
@@ -571,8 +572,9 @@
       "name": "visit_AsyncFunctionDef",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py",
-      "line_start": 88,
+      "line_start": 96,
       "docstring": null,
+      "source_code": "def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):\n        self._handle_function(node, is_async=True)",
       "is_async": false,
       "decorators": []
     },
@@ -581,8 +583,9 @@
       "name": "_handle_function",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py",
-      "line_start": 91,
+      "line_start": 99,
       "docstring": null,
+      "source_code": "def _handle_function(self, node, is_async: bool):\n        if self._current_class_id:\n            # Method: ID bao gồm tên class để tránh trùng với top-level func cùng tên\n            func_id = f\"func:{self.file_path}::{self._current_class_name}::{node.name}\"\n            container_id = self._current_class_id\n            edge_type = EdgeType.CONTAINS\n        else:\n            func_id = f\"func:{self.file_path}::{node.name}\"\n            container_id = self.module_id\n            edge_type = EdgeType.DEFINES\n\n        self.nodes.append(GraphNode(\n            id=func_id,\n            name=node.name,\n            type=NodeType.FUNCTION,\n            file_path=self.file_path,\n            line_start=node.lineno,\n            docstring=ast.get_docstring(node),\n            source_code=ast.get_source_segment(self.source, node) if self.source else None,\n            is_async=is_async,\n            decorators=[_decorator_name(d) for d in node.decorator_list],\n        ))\n        self.edges.append(GraphEdge(\n            type=edge_type,\n            source_id=container_id,\n            target_id=func_id,\n            confidence=1.0,\n        ))\n        for call_name in _collect_calls(node):\n            # func_ref: là ghost ID — resolver sẽ cố map về func node thật (best-effort)\n            self.edges.append(GraphEdge(\n                type=EdgeType.CALLS,\n                source_id=func_id,\n                target_id=f\"func_ref:{call_name}\",\n                confidence=0.0,\n            ))",
       "is_async": false,
       "decorators": []
     },
@@ -591,8 +594,9 @@
       "name": "_resolve_name",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py",
-      "line_start": 127,
+      "line_start": 138,
       "docstring": null,
+      "source_code": "def _resolve_name(node: ast.expr) -> Optional[str]:\n    if isinstance(node, ast.Name):\n        return node.id\n    if isinstance(node, ast.Attribute):\n        parts = []\n        cur = node\n        while isinstance(cur, ast.Attribute):\n            parts.append(cur.attr)\n            cur = cur.value\n        if isinstance(cur, ast.Name):\n            parts.append(cur.id)\n            return \".\".join(reversed(parts))\n    return None",
       "is_async": false,
       "decorators": []
     },
@@ -601,8 +605,9 @@
       "name": "_decorator_name",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py",
-      "line_start": 142,
+      "line_start": 153,
       "docstring": null,
+      "source_code": "def _decorator_name(node: ast.expr) -> str:\n    return _resolve_name(node) or \"unknown\"",
       "is_async": false,
       "decorators": []
     },
@@ -611,8 +616,9 @@
       "name": "_collect_calls",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py",
-      "line_start": 146,
+      "line_start": 157,
       "docstring": null,
+      "source_code": "def _collect_calls(func_node) -> List[str]:\n    class _Collector(ast.NodeVisitor):\n        def __init__(self):\n            self.calls: List[str] = []\n\n        def visit_Call(self, node: ast.Call):\n            name = _resolve_name(node.func)\n            if name:\n                self.calls.append(name)\n            self.generic_visit(node)\n\n        # Dừng tại nested function — chỉ thu thập call ở body trực tiếp của hàm này\n        def visit_FunctionDef(self, node):\n            pass\n\n        def visit_AsyncFunctionDef(self, node):\n            pass\n\n    collector = _Collector()\n    for stmt in func_node.body:\n        collector.visit(stmt)\n    return collector.calls",
       "is_async": false,
       "decorators": []
     },
@@ -623,6 +629,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/merger.py",
       "line_start": 1,
       "docstring": null,
+      "source_code": null,
       "is_async": false,
       "decorators": []
     },
@@ -632,7 +639,8 @@
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/merger.py",
       "line_start": 13,
-      "docstring": null,
+      "docstring": "Pipeline chính:\n  1. Scan tất cả .py (bỏ __init__.py)\n  2. Extract từng file → (nodes, edges) với ghost IDs\n  3. Dedup nodes theo ID (tránh trùng khi nhiều file khai báo cùng tên)\n  4. Resolve ghost IDs → confidence thật\n  5. Ghi JSON ra disk",
+      "source_code": "def merge_project(project_root: str, output_path: str, project_name: str = None) -> dict:\n    \"\"\"\n    Pipeline chính:\n      1. Scan tất cả .py (bỏ __init__.py)\n      2. Extract từng file → (nodes, edges) với ghost IDs\n      3. Dedup nodes theo ID (tránh trùng khi nhiều file khai báo cùng tên)\n      4. Resolve ghost IDs → confidence thật\n      5. Ghi JSON ra disk\n    \"\"\"\n    root = Path(project_root).resolve()\n    project_name = project_name or root.name\n\n    # Bỏ __init__.py: re-export của chúng sẽ gây duplicate Module node\n    # (xử lý __init__.py flattening là việc của phase sau)\n    files = [f for f in scan_py_files(str(root)) if Path(f).name != \"__init__.py\"]\n\n    all_nodes: List[GraphNode] = []\n    all_edges: List[GraphEdge] = []\n\n    print(f\"[*] Extracting {len(files)} files...\")\n    for file_path in files:\n        try:\n            tree, source = parse_file(file_path)\n            nodes, edges = extract(tree, file_path, source)\n            all_nodes.extend(nodes)\n            all_edges.extend(edges)\n        except (SyntaxError, Exception) as e:\n            print(f\"[-] Skipping {file_path}: {e}\")\n\n    # Dedup: giữ lần xuất hiện đầu tiên của mỗi node ID\n    seen: set = set()\n    deduped: List[GraphNode] = []\n    for node in all_nodes:\n        if node.id not in seen:\n            deduped.append(node)\n            seen.add(node.id)\n\n    print(f\"[*] Resolving cross-file references...\")\n    # Resolver cần toàn bộ node list để build lookup map trước khi resolve edges\n    resolver = ImportResolver(str(root), deduped)\n    resolved_edges = resolver.resolve(all_edges)\n\n    graph = {\n        \"project\": project_name,\n        \"project_root\": str(root),\n        \"extracted_at\": datetime.now().isoformat(),\n        \"file_count\": len(files),\n        \"nodes\": [_node_dict(n) for n in deduped],\n        \"edges\": [_edge_dict(e) for e in resolved_edges],\n    }\n\n    out = Path(output_path)\n    out.parent.mkdir(parents=True, exist_ok=True)\n    out.write_text(json.dumps(graph, indent=2, ensure_ascii=False), encoding=\"utf-8\")\n\n    resolved_count = sum(1 for e in resolved_edges if e.confidence > 0.0)\n    print(f\"[+] Written to {output_path}\")\n    print(f\"    Nodes: {len(deduped)} | Edges: {len(resolved_edges)} ({resolved_count} resolved)\")\n\n    return graph",
       "is_async": false,
       "decorators": []
     },
@@ -641,8 +649,9 @@
       "name": "_node_dict",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/merger.py",
-      "line_start": 63,
+      "line_start": 75,
       "docstring": null,
+      "source_code": "def _node_dict(n: GraphNode) -> dict:\n    return {\n        \"id\": n.id,\n        \"name\": n.name,\n        \"type\": n.type.value,\n        \"file_path\": n.file_path,\n        \"line_start\": n.line_start,\n        \"docstring\": n.docstring,\n        \"source_code\": n.source_code,\n        \"is_async\": n.is_async,\n        \"decorators\": n.decorators,\n    }",
       "is_async": false,
       "decorators": []
     },
@@ -651,8 +660,9 @@
       "name": "_edge_dict",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/merger.py",
-      "line_start": 76,
+      "line_start": 89,
       "docstring": null,
+      "source_code": "def _edge_dict(e: GraphEdge) -> dict:\n    return {\n        \"type\": e.type.value,\n        \"source_id\": e.source_id,\n        \"target_id\": e.target_id,\n        \"confidence\": e.confidence,\n    }",
       "is_async": false,
       "decorators": []
     },
@@ -663,6 +673,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/models.py",
       "line_start": 1,
       "docstring": null,
+      "source_code": null,
       "is_async": false,
       "decorators": []
     },
@@ -671,8 +682,9 @@
       "name": "NodeType",
       "type": "Class",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/models.py",
-      "line_start": 6,
+      "line_start": 7,
       "docstring": null,
+      "source_code": "class NodeType(str, Enum):\n    MODULE = \"Module\"\n    CLASS = \"Class\"\n    FUNCTION = \"Function\"",
       "is_async": false,
       "decorators": []
     },
@@ -681,8 +693,9 @@
       "name": "EdgeType",
       "type": "Class",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/models.py",
-      "line_start": 12,
+      "line_start": 13,
       "docstring": null,
+      "source_code": "class EdgeType(str, Enum):\n    IMPORTS = \"IMPORTS\"   # Module → Module\n    DEFINES = \"DEFINES\"   # Module → Class | top-level Function\n    CONTAINS = \"CONTAINS\" # Class → Method\n    CALLS = \"CALLS\"       # Function → Function (best-effort)\n    INHERITS = \"INHERITS\"",
       "is_async": false,
       "decorators": []
     },
@@ -691,8 +704,9 @@
       "name": "GraphNode",
       "type": "Class",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/models.py",
-      "line_start": 21,
+      "line_start": 22,
       "docstring": null,
+      "source_code": "class GraphNode:\n    id: str           # scheme: \"module:path\", \"class:path::Name\", \"func:path::Class::name\"\n    name: str\n    type: NodeType\n    file_path: str\n    line_start: int\n    docstring: Optional[str] = None\n    source_code: Optional[str] = None\n    is_async: bool = False\n    decorators: List[str] = field(default_factory=list)",
       "is_async": false,
       "decorators": [
         "dataclass"
@@ -703,8 +717,9 @@
       "name": "GraphEdge",
       "type": "Class",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/models.py",
-      "line_start": 33,
+      "line_start": 35,
       "docstring": null,
+      "source_code": "class GraphEdge:\n    type: EdgeType\n    source_id: str\n    target_id: str\n    # 0.0 = unresolved (external lib or ambiguous call) — filtered out in export/query\n    confidence: float = 1.0",
       "is_async": false,
       "decorators": [
         "dataclass"
@@ -717,6 +732,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/resolver.py",
       "line_start": 1,
       "docstring": null,
+      "source_code": null,
       "is_async": false,
       "decorators": []
     },
@@ -726,7 +742,8 @@
       "type": "Class",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/resolver.py",
       "line_start": 7,
-      "docstring": null,
+      "docstring": "Nhận danh sách nodes + edges thô (chứa ghost IDs), trả về edges đã resolve.\n\nGhost ID scheme (từ extractor):\n  dep:module.name     → cần map về module:path\n  class_ref:ClassName → cần map về class:path::Name\n  func_ref:func_name  → cần map về func:path::Name (best-effort)\n\nEdges không resolve được (external lib, builtin) giữ confidence=0.0\nvà sẽ bị lọc ra ở export/query layer.",
+      "source_code": "class ImportResolver:\n    \"\"\"\n    Nhận danh sách nodes + edges thô (chứa ghost IDs), trả về edges đã resolve.\n\n    Ghost ID scheme (từ extractor):\n      dep:module.name     → cần map về module:path\n      class_ref:ClassName → cần map về class:path::Name\n      func_ref:func_name  → cần map về func:path::Name (best-effort)\n\n    Edges không resolve được (external lib, builtin) giữ confidence=0.0\n    và sẽ bị lọc ra ở export/query layer.\n    \"\"\"\n\n    def __init__(self, project_root: str, nodes: List[GraphNode]):\n        self._root = Path(project_root).resolve()\n        # Ba map riêng vì mỗi loại ghost ID có chiến lược resolve khác nhau\n        self._module_map: Dict[str, str] = {}   # \"extraction.extractor\" → node_id\n        self._class_map: Dict[str, List[str]] = {}  # \"ClassName\" → [node_ids]\n        self._func_map: Dict[str, List[str]] = {}   # \"func_name\" → [node_ids]\n        self._build_maps(nodes)\n\n    def _build_maps(self, nodes: List[GraphNode]):\n        for node in nodes:\n            if node.type == NodeType.MODULE:\n                dotted = self._to_dotted(node.file_path)\n                if dotted:\n                    self._module_map[dotted] = node.id\n            elif node.type == NodeType.CLASS:\n                self._class_map.setdefault(node.name, []).append(node.id)\n            elif node.type == NodeType.FUNCTION:\n                self._func_map.setdefault(node.name, []).append(node.id)\n\n    def _to_dotted(self, file_path: str) -> Optional[str]:\n        # \"C:/project/extraction/extractor.py\" → \"extraction.extractor\"\n        try:\n            rel = Path(file_path).resolve().relative_to(self._root)\n            return rel.with_suffix(\"\").as_posix().replace(\"/\", \".\")\n        except ValueError:\n            return None  # file nằm ngoài project root — bỏ qua\n\n    def resolve(self, edges: List[GraphEdge]) -> List[GraphEdge]:\n        return [self._resolve_one(e) for e in edges]\n\n    def _resolve_one(self, edge: GraphEdge) -> GraphEdge:\n        tgt = edge.target_id\n\n        if tgt.startswith(\"dep:\"):\n            resolved = self._resolve_module(tgt[4:])\n            return self._make(edge, resolved, conf_hit=1.0)\n\n        if tgt.startswith(\"class_ref:\"):\n            resolved = self._resolve_class(tgt[10:])\n            return self._make(edge, resolved, conf_hit=1.0)\n\n        if tgt.startswith(\"func_ref:\"):\n            resolved, conf = self._resolve_func(tgt[9:], edge.source_id)\n            return self._make(edge, resolved, conf_hit=conf)\n\n        return edge  # edge đã resolve sẵn (DEFINES, CONTAINS) — giữ nguyên\n\n    def _make(self, edge: GraphEdge, resolved: Optional[str], conf_hit: float) -> GraphEdge:\n        if resolved:\n            return GraphEdge(\n                type=edge.type,\n                source_id=edge.source_id,\n                target_id=resolved,\n                confidence=conf_hit,\n            )\n        # Không tìm thấy → giữ ghost ID, đánh confidence=0.0 để filter ra sau\n        return GraphEdge(\n            type=edge.type,\n            source_id=edge.source_id,\n            target_id=edge.target_id,\n            confidence=0.0,\n        )\n\n    def _resolve_module(self, module_name: str) -> Optional[str]:\n        if module_name in self._module_map:\n            return self._module_map[module_name]\n        # \"from extraction.extractor import X\" → module_name = \"extraction.extractor\"\n        # cũng khớp nếu chỉ import package cha \"from extraction import ...\"\n        for key, val in self._module_map.items():\n            if key == module_name or key.startswith(module_name + \".\"):\n                return val\n        return None  # thư viện ngoài (ast, os, typing…) — drop\n\n    def _resolve_class(self, class_name: str) -> Optional[str]:\n        # Dùng phần cuối: \"ast.NodeVisitor\" → \"NodeVisitor\" để bỏ qua tiền tố module\n        short = class_name.split(\".\")[-1]\n        candidates = self._class_map.get(short, [])\n        return candidates[0] if candidates else None\n\n    def _resolve_func(self, func_ref: str, caller_id: str) -> tuple[Optional[str], float]:\n        short = func_ref.split(\".\")[-1]\n        candidates = self._func_map.get(short, [])\n        if not candidates:\n            return None, 0.0\n        if len(candidates) == 1:\n            # Chỉ một hàm có tên này trong project → khá chắc\n            return candidates[0], 0.7\n        # Nhiều hàm cùng tên → ưu tiên file giống caller để giảm false positive\n        caller_file = caller_id.split(\"::\")[0]\n        for prefix in (\"func:\", \"module:\", \"class:\"):\n            caller_file = caller_file.replace(prefix, \"\")\n        same_file = [c for c in candidates if caller_file in c]\n        return (same_file[0] if same_file else candidates[0]), 0.5",
       "is_async": false,
       "decorators": []
     },
@@ -735,8 +752,9 @@
       "name": "__init__",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/resolver.py",
-      "line_start": 8,
+      "line_start": 20,
       "docstring": null,
+      "source_code": "def __init__(self, project_root: str, nodes: List[GraphNode]):\n        self._root = Path(project_root).resolve()\n        # Ba map riêng vì mỗi loại ghost ID có chiến lược resolve khác nhau\n        self._module_map: Dict[str, str] = {}   # \"extraction.extractor\" → node_id\n        self._class_map: Dict[str, List[str]] = {}  # \"ClassName\" → [node_ids]\n        self._func_map: Dict[str, List[str]] = {}   # \"func_name\" → [node_ids]\n        self._build_maps(nodes)",
       "is_async": false,
       "decorators": []
     },
@@ -745,8 +763,9 @@
       "name": "_build_maps",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/resolver.py",
-      "line_start": 15,
+      "line_start": 28,
       "docstring": null,
+      "source_code": "def _build_maps(self, nodes: List[GraphNode]):\n        for node in nodes:\n            if node.type == NodeType.MODULE:\n                dotted = self._to_dotted(node.file_path)\n                if dotted:\n                    self._module_map[dotted] = node.id\n            elif node.type == NodeType.CLASS:\n                self._class_map.setdefault(node.name, []).append(node.id)\n            elif node.type == NodeType.FUNCTION:\n                self._func_map.setdefault(node.name, []).append(node.id)",
       "is_async": false,
       "decorators": []
     },
@@ -755,8 +774,9 @@
       "name": "_to_dotted",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/resolver.py",
-      "line_start": 26,
+      "line_start": 39,
       "docstring": null,
+      "source_code": "def _to_dotted(self, file_path: str) -> Optional[str]:\n        # \"C:/project/extraction/extractor.py\" → \"extraction.extractor\"\n        try:\n            rel = Path(file_path).resolve().relative_to(self._root)\n            return rel.with_suffix(\"\").as_posix().replace(\"/\", \".\")\n        except ValueError:\n            return None",
       "is_async": false,
       "decorators": []
     },
@@ -765,8 +785,9 @@
       "name": "resolve",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/resolver.py",
-      "line_start": 33,
+      "line_start": 47,
       "docstring": null,
+      "source_code": "def resolve(self, edges: List[GraphEdge]) -> List[GraphEdge]:\n        return [self._resolve_one(e) for e in edges]",
       "is_async": false,
       "decorators": []
     },
@@ -775,8 +796,9 @@
       "name": "_resolve_one",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/resolver.py",
-      "line_start": 36,
+      "line_start": 50,
       "docstring": null,
+      "source_code": "def _resolve_one(self, edge: GraphEdge) -> GraphEdge:\n        tgt = edge.target_id\n\n        if tgt.startswith(\"dep:\"):\n            resolved = self._resolve_module(tgt[4:])\n            return self._make(edge, resolved, conf_hit=1.0)\n\n        if tgt.startswith(\"class_ref:\"):\n            resolved = self._resolve_class(tgt[10:])\n            return self._make(edge, resolved, conf_hit=1.0)\n\n        if tgt.startswith(\"func_ref:\"):\n            resolved, conf = self._resolve_func(tgt[9:], edge.source_id)\n            return self._make(edge, resolved, conf_hit=conf)\n\n        return edge",
       "is_async": false,
       "decorators": []
     },
@@ -785,8 +807,9 @@
       "name": "_make",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/resolver.py",
-      "line_start": 53,
+      "line_start": 67,
       "docstring": null,
+      "source_code": "def _make(self, edge: GraphEdge, resolved: Optional[str], conf_hit: float) -> GraphEdge:\n        if resolved:\n            return GraphEdge(\n                type=edge.type,\n                source_id=edge.source_id,\n                target_id=resolved,\n                confidence=conf_hit,\n            )\n        # Không tìm thấy → giữ ghost ID, đánh confidence=0.0 để filter ra sau\n        return GraphEdge(\n            type=edge.type,\n            source_id=edge.source_id,\n            target_id=edge.target_id,\n            confidence=0.0,\n        )",
       "is_async": false,
       "decorators": []
     },
@@ -795,8 +818,9 @@
       "name": "_resolve_module",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/resolver.py",
-      "line_start": 68,
+      "line_start": 83,
       "docstring": null,
+      "source_code": "def _resolve_module(self, module_name: str) -> Optional[str]:\n        if module_name in self._module_map:\n            return self._module_map[module_name]\n        # \"from extraction.extractor import X\" → module_name = \"extraction.extractor\"\n        # cũng khớp nếu chỉ import package cha \"from extraction import ...\"\n        for key, val in self._module_map.items():\n            if key == module_name or key.startswith(module_name + \".\"):\n                return val\n        return None",
       "is_async": false,
       "decorators": []
     },
@@ -805,8 +829,9 @@
       "name": "_resolve_class",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/resolver.py",
-      "line_start": 77,
+      "line_start": 93,
       "docstring": null,
+      "source_code": "def _resolve_class(self, class_name: str) -> Optional[str]:\n        # Dùng phần cuối: \"ast.NodeVisitor\" → \"NodeVisitor\" để bỏ qua tiền tố module\n        short = class_name.split(\".\")[-1]\n        candidates = self._class_map.get(short, [])\n        return candidates[0] if candidates else None",
       "is_async": false,
       "decorators": []
     },
@@ -815,8 +840,9 @@
       "name": "_resolve_func",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/resolver.py",
-      "line_start": 82,
+      "line_start": 99,
       "docstring": null,
+      "source_code": "def _resolve_func(self, func_ref: str, caller_id: str) -> tuple[Optional[str], float]:\n        short = func_ref.split(\".\")[-1]\n        candidates = self._func_map.get(short, [])\n        if not candidates:\n            return None, 0.0\n        if len(candidates) == 1:\n            # Chỉ một hàm có tên này trong project → khá chắc\n            return candidates[0], 0.7\n        # Nhiều hàm cùng tên → ưu tiên file giống caller để giảm false positive\n        caller_file = caller_id.split(\"::\")[0]\n        for prefix in (\"func:\", \"module:\", \"class:\"):\n            caller_file = caller_file.replace(prefix, \"\")\n        same_file = [c for c in candidates if caller_file in c]\n        return (same_file[0] if same_file else candidates[0]), 0.5",
       "is_async": false,
       "decorators": []
     },
@@ -827,6 +853,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/graph/builder.py",
       "line_start": 1,
       "docstring": null,
+      "source_code": null,
       "is_async": false,
       "decorators": []
     },
@@ -837,6 +864,29 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/graph/builder.py",
       "line_start": 7,
       "docstring": null,
+      "source_code": "def build_graph(nodes: List[GraphNode], edges: List[GraphEdge]) -> nx.MultiDiGraph:\n    g = nx.MultiDiGraph()\n    node_ids = set()\n\n    for node in nodes:\n        g.add_node(\n            node.id,\n            name=node.name,\n            type=node.type.value,\n            file_path=node.file_path,\n            content=node.docstring or \"\",\n            source_code=\"\",\n        )\n        node_ids.add(node.id)\n\n    for edge in edges:\n        if (edge.confidence > 0.0\n                and edge.source_id in node_ids\n                and edge.target_id in node_ids):\n            g.add_edge(\n                edge.source_id,\n                edge.target_id,\n                relationship=edge.type.value,\n                confidence=edge.confidence,\n            )\n\n    return g",
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py",
+      "name": "loader",
+      "type": "Module",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py",
+      "line_start": 1,
+      "docstring": null,
+      "source_code": null,
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "name": "load",
+      "type": "Function",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py",
+      "line_start": 28,
+      "docstring": null,
+      "source_code": "def load(\n    json_path: str,\n    uri: str = None,\n    user: str = None,\n    password: str = None,\n) -> None:\n    uri      = uri      or os.environ.get(\"NEO4J_URI\",     \"bolt://localhost:7687\")\n    user     = user     or os.environ.get(\"NEO4J_USER\",    \"neo4j\")\n    password = password or os.environ.get(\"NEO4J_PASSWORD\", \"\")\n\n    data = json.loads(Path(json_path).read_text(encoding=\"utf-8\"))\n    nodes = data[\"nodes\"]\n    edges = [e for e in data[\"edges\"] if e[\"confidence\"] > 0.0]\n\n    driver = GraphDatabase.driver(uri, auth=(user, password))\n    try:\n        with driver.session() as session:\n            for cql in _CONSTRAINTS:\n                session.run(cql)\n\n            for node in nodes:\n                label = node[\"type\"]  # \"Module\" | \"Class\" | \"Function\"\n                session.run(\n                    _NODE_MERGE.format(label=label),\n                    id=node[\"id\"],\n                    name=node[\"name\"],\n                    file_path=node[\"file_path\"],\n                    line_start=node[\"line_start\"],\n                    docstring=node.get(\"docstring\"),\n                    is_async=node.get(\"is_async\", False),\n                    decorators=node.get(\"decorators\", []),\n                )\n\n            loaded_edges = 0\n            for edge in edges:\n                merge_cql = _EDGE_MERGE.get(edge[\"type\"])\n                if not merge_cql:\n                    continue\n                session.run(\n                    f\"MATCH (a {{id: $source_id}}), (b {{id: $target_id}}) {merge_cql}\",\n                    source_id=edge[\"source_id\"],\n                    target_id=edge[\"target_id\"],\n                    confidence=edge[\"confidence\"],\n                )\n                loaded_edges += 1\n    finally:\n        driver.close()\n\n    print(f\"[+] Neo4j loaded: {len(nodes)} nodes | {loaded_edges} edges\")\n    print(f\"    Project: {data.get('project')} | URI: {uri}\")",
       "is_async": false,
       "decorators": []
     },
@@ -847,6 +897,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/ingestion/file_scanner.py",
       "line_start": 1,
       "docstring": null,
+      "source_code": null,
       "is_async": false,
       "decorators": []
     },
@@ -857,6 +908,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/ingestion/file_scanner.py",
       "line_start": 6,
       "docstring": null,
+      "source_code": "def scan_py_files(root: str) -> list[str]:\n    path = Path(root)\n    if path.is_file():\n        return [path.as_posix()] if path.suffix == \".py\" else []\n\n    return [\n        p.as_posix()\n        for p in path.rglob(\"*.py\")\n        if p.is_file() and not _EXCLUDE.intersection(p.parts)\n    ]",
       "is_async": false,
       "decorators": []
     },
@@ -867,6 +919,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/parsing/parser.py",
       "line_start": 1,
       "docstring": null,
+      "source_code": null,
       "is_async": false,
       "decorators": []
     },
@@ -875,8 +928,86 @@
       "name": "parse_file",
       "type": "Function",
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/parsing/parser.py",
-      "line_start": 4,
+      "line_start": 5,
       "docstring": null,
+      "source_code": "def parse_file(path: str) -> Tuple[ast.AST, str]:\n    with open(path, encoding=\"utf-8\") as f:\n        source = f.read()\n    return ast.parse(source, filename=path), source",
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py",
+      "name": "engine",
+      "type": "Module",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py",
+      "line_start": 1,
+      "docstring": null,
+      "source_code": null,
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "class:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine",
+      "name": "QueryEngine",
+      "type": "Class",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py",
+      "line_start": 8,
+      "docstring": null,
+      "source_code": "class QueryEngine:\n    def __init__(self, graph_path: str):\n        data = json.loads(Path(graph_path).read_text(encoding=\"utf-8\"))\n        self.project = data[\"project\"]\n        self.nodes: dict[str, dict] = {n[\"id\"]: n for n in data[\"nodes\"]}\n\n        self.outgoing: dict[str, list[dict]] = {nid: [] for nid in self.nodes}\n        self.incoming: dict[str, list[dict]] = {nid: [] for nid in self.nodes}\n        for edge in data[\"edges\"]:\n            if edge[\"confidence\"] > 0.0:\n                src, tgt = edge[\"source_id\"], edge[\"target_id\"]\n                if src in self.outgoing:\n                    self.outgoing[src].append(edge)\n                if tgt in self.incoming:\n                    self.incoming[tgt].append(edge)\n\n        self._client = anthropic.Anthropic()\n\n    def find_nodes(self, question: str) -> list[dict]:\n        q = question.lower()\n        matched = []\n        seen: set[str] = set()\n\n        for node in self.nodes.values():\n            if node[\"name\"].lower() in q and node[\"id\"] not in seen:\n                matched.append(node)\n                seen.add(node[\"id\"])\n\n        if not matched:\n            for node in self.nodes.values():\n                name = node[\"name\"].lower()\n                if any(name in word or word in name for word in q.split() if len(word) > 3):\n                    if node[\"id\"] not in seen:\n                        matched.append(node)\n                        seen.add(node[\"id\"])\n\n        return matched[:8]\n\n    def _node_summary(self, node: dict) -> str:\n        lines = [f\"[{node['type']}] {node['name']} — {node['file_path']}:{node['line_start']}\"]\n        if node.get(\"docstring\"):\n            lines.append(f\"  doc: {node['docstring'][:120]}\")\n        if node.get(\"source_code\"):\n            code = node[\"source_code\"]\n            if len(code) > 1500:\n                code = code[:1500] + \"\\n  ... (truncated)\"\n            lines.append(\"  source:\")\n            for line in code.splitlines():\n                lines.append(f\"    {line}\")\n        for edge in self.outgoing.get(node[\"id\"], []):\n            tgt = self.nodes.get(edge[\"target_id\"])\n            if tgt:\n                lines.append(f\"  {edge['type']} → {tgt['name']}\")\n        for edge in self.incoming.get(node[\"id\"], []):\n            src = self.nodes.get(edge[\"source_id\"])\n            if src:\n                lines.append(f\"  ← {edge['type']} {src['name']}\")\n        return \"\\n\".join(lines)\n\n    def build_context(self, nodes: list[dict]) -> tuple[str, list[str]]:\n        if not nodes:\n            modules = [n for n in self.nodes.values() if n[\"type\"] == \"Module\"][:15]\n            ctx = f\"Project: {self.project}\\nModules: {', '.join(m['name'] for m in modules)}\"\n            return ctx, []\n\n        parts = [f\"Project: {self.project}\", \"\"]\n        names_used = []\n        for node in nodes:\n            parts.append(self._node_summary(node))\n            parts.append(\"\")\n            names_used.append(node[\"name\"])\n        return \"\\n\".join(parts), names_used\n\n    def ask(self, question: str, history: list[dict]) -> tuple[str, list[str]]:\n        matched = self.find_nodes(question)\n        context, sources = self.build_context(matched)\n\n        system = (\n            \"You are a code assistant. Answer questions about the codebase using the graph \"\n            \"context below. Be concise. Reference specific names and file paths. \"\n            \"If context is insufficient, say so.\\n\\n\"\n            f\"=== GRAPH CONTEXT ===\\n{context}\\n====================\"\n        )\n\n        messages = history + [{\"role\": \"user\", \"content\": question}]\n\n        response = self._client.messages.create(\n            model=\"claude-haiku-4-5-20251001\",\n            max_tokens=1024,\n            system=system,\n            messages=messages,\n        )\n\n        return response.content[0].text, sources",
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::__init__",
+      "name": "__init__",
+      "type": "Function",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py",
+      "line_start": 9,
+      "docstring": null,
+      "source_code": "def __init__(self, graph_path: str):\n        data = json.loads(Path(graph_path).read_text(encoding=\"utf-8\"))\n        self.project = data[\"project\"]\n        self.nodes: dict[str, dict] = {n[\"id\"]: n for n in data[\"nodes\"]}\n\n        self.outgoing: dict[str, list[dict]] = {nid: [] for nid in self.nodes}\n        self.incoming: dict[str, list[dict]] = {nid: [] for nid in self.nodes}\n        for edge in data[\"edges\"]:\n            if edge[\"confidence\"] > 0.0:\n                src, tgt = edge[\"source_id\"], edge[\"target_id\"]\n                if src in self.outgoing:\n                    self.outgoing[src].append(edge)\n                if tgt in self.incoming:\n                    self.incoming[tgt].append(edge)\n\n        self._client = anthropic.Anthropic()",
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::find_nodes",
+      "name": "find_nodes",
+      "type": "Function",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py",
+      "line_start": 26,
+      "docstring": null,
+      "source_code": "def find_nodes(self, question: str) -> list[dict]:\n        q = question.lower()\n        matched = []\n        seen: set[str] = set()\n\n        for node in self.nodes.values():\n            if node[\"name\"].lower() in q and node[\"id\"] not in seen:\n                matched.append(node)\n                seen.add(node[\"id\"])\n\n        if not matched:\n            for node in self.nodes.values():\n                name = node[\"name\"].lower()\n                if any(name in word or word in name for word in q.split() if len(word) > 3):\n                    if node[\"id\"] not in seen:\n                        matched.append(node)\n                        seen.add(node[\"id\"])\n\n        return matched[:8]",
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "name": "_node_summary",
+      "type": "Function",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py",
+      "line_start": 46,
+      "docstring": null,
+      "source_code": "def _node_summary(self, node: dict) -> str:\n        lines = [f\"[{node['type']}] {node['name']} — {node['file_path']}:{node['line_start']}\"]\n        if node.get(\"docstring\"):\n            lines.append(f\"  doc: {node['docstring'][:120]}\")\n        if node.get(\"source_code\"):\n            code = node[\"source_code\"]\n            if len(code) > 1500:\n                code = code[:1500] + \"\\n  ... (truncated)\"\n            lines.append(\"  source:\")\n            for line in code.splitlines():\n                lines.append(f\"    {line}\")\n        for edge in self.outgoing.get(node[\"id\"], []):\n            tgt = self.nodes.get(edge[\"target_id\"])\n            if tgt:\n                lines.append(f\"  {edge['type']} → {tgt['name']}\")\n        for edge in self.incoming.get(node[\"id\"], []):\n            src = self.nodes.get(edge[\"source_id\"])\n            if src:\n                lines.append(f\"  ← {edge['type']} {src['name']}\")\n        return \"\\n\".join(lines)",
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::build_context",
+      "name": "build_context",
+      "type": "Function",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py",
+      "line_start": 67,
+      "docstring": null,
+      "source_code": "def build_context(self, nodes: list[dict]) -> tuple[str, list[str]]:\n        if not nodes:\n            modules = [n for n in self.nodes.values() if n[\"type\"] == \"Module\"][:15]\n            ctx = f\"Project: {self.project}\\nModules: {', '.join(m['name'] for m in modules)}\"\n            return ctx, []\n\n        parts = [f\"Project: {self.project}\", \"\"]\n        names_used = []\n        for node in nodes:\n            parts.append(self._node_summary(node))\n            parts.append(\"\")\n            names_used.append(node[\"name\"])\n        return \"\\n\".join(parts), names_used",
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::ask",
+      "name": "ask",
+      "type": "Function",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py",
+      "line_start": 81,
+      "docstring": null,
+      "source_code": "def ask(self, question: str, history: list[dict]) -> tuple[str, list[str]]:\n        matched = self.find_nodes(question)\n        context, sources = self.build_context(matched)\n\n        system = (\n            \"You are a code assistant. Answer questions about the codebase using the graph \"\n            \"context below. Be concise. Reference specific names and file paths. \"\n            \"If context is insufficient, say so.\\n\\n\"\n            f\"=== GRAPH CONTEXT ===\\n{context}\\n====================\"\n        )\n\n        messages = history + [{\"role\": \"user\", \"content\": question}]\n\n        response = self._client.messages.create(\n            model=\"claude-haiku-4-5-20251001\",\n            max_tokens=1024,\n            system=system,\n            messages=messages,\n        )\n\n        return response.content[0].text, sources",
       "is_async": false,
       "decorators": []
     },
@@ -887,6 +1018,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/query/graph_query.py",
       "line_start": 1,
       "docstring": null,
+      "source_code": null,
       "is_async": false,
       "decorators": []
     },
@@ -897,6 +1029,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/query/graph_query.py",
       "line_start": 4,
       "docstring": null,
+      "source_code": "def get_node_context(graph: nx.DiGraph, node_id: str) -> dict:\n    if node_id not in graph:\n        return {}\n    data = graph.nodes[node_id]\n    return {\"id\": node_id, \"name\": data.get(\"name\"), \"file\": data.get(\"file\")}",
       "is_async": false,
       "decorators": []
     },
@@ -907,6 +1040,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/query/graph_query.py",
       "line_start": 11,
       "docstring": null,
+      "source_code": "def get_function_calls(graph: nx.DiGraph, node_id: str) -> list[str]:\n    # raise NetworkXError nếu node_id không tồn tại trong graph\n    return list(graph.successors(node_id))",
       "is_async": false,
       "decorators": []
     },
@@ -917,6 +1051,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/query/graph_query.py",
       "line_start": 16,
       "docstring": null,
+      "source_code": "def get_callers(graph: nx.DiGraph, node_id: str) -> list[str]:\n    # raise NetworkXError nếu node_id không tồn tại trong graph\n    return list(graph.predecessors(node_id))",
       "is_async": false,
       "decorators": []
     },
@@ -927,6 +1062,7 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/query/graph_query.py",
       "line_start": 21,
       "docstring": null,
+      "source_code": "def get_call_chain(graph: nx.DiGraph, start_node_id: str, depth: int = 2) -> dict:\n    # path lưu tập tổ tiên; trả về \"[cycle]\" thay vì dict khi phát hiện vòng lặp\n    def _expand(node: str, remaining_depth: int, path: frozenset):\n        if node in path:\n            return \"[cycle]\"\n        if remaining_depth == 0:\n            return {}\n        current_path = path | {node}\n        return {\n            callee: _expand(callee, remaining_depth - 1, current_path)\n            for callee in graph.successors(node)\n        }\n\n    return {start_node_id: _expand(start_node_id, depth, frozenset())}",
       "is_async": false,
       "decorators": []
     },
@@ -937,6 +1073,73 @@
       "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/query/graph_query.py",
       "line_start": 37,
       "docstring": null,
+      "source_code": "def format_call_chain(chain: dict) -> str:\n    # rút gọn \"path/to/file.py::func\" thành \"func (file.py)\" cho dễ đọc\n    def _short(node_id: str) -> str:\n        if \"::\" in node_id:\n            file_path, name = node_id.split(\"::\", 1)\n            file_name = file_path.split(\"/\")[-1].split(\"\\\\\")[-1]\n            return f\"{name} ({file_name})\"\n        return node_id\n\n    def _render(node_id: str, subtree, prefix: str, is_last: bool) -> list[str]:\n        connector = \"└── \" if is_last else \"├── \"\n        extension = \"    \" if is_last else \"│   \"\n        label = _short(node_id)\n        if subtree == \"[cycle]\":  # dừng vẽ nhánh khi gặp vòng lặp\n            return [prefix + connector + label + \"  [cycle]\"]\n        lines = [prefix + connector + label]\n        children = list(subtree.items())\n        for i, (child_id, child_subtree) in enumerate(children):\n            lines += _render(child_id, child_subtree, prefix + extension, i == len(children) - 1)\n        return lines\n\n    lines = []\n    for root_id, subtree in chain.items():\n        lines.append(_short(root_id))\n        items = list(subtree.items())\n        for i, (child_id, child_subtree) in enumerate(items):\n            lines += _render(child_id, child_subtree, \"\", i == len(items) - 1)\n    return \"\\n\".join(lines)",
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
+      "name": "test_attr",
+      "type": "Module",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
+      "line_start": 1,
+      "docstring": null,
+      "source_code": null,
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::a",
+      "name": "a",
+      "type": "Function",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
+      "line_start": 3,
+      "docstring": null,
+      "source_code": "def a():\n    b()\n    os.path.join(\"a\", \"b\")",
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::b",
+      "name": "b",
+      "type": "Function",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
+      "line_start": 7,
+      "docstring": null,
+      "source_code": "def b():\n    pass",
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "class:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::User",
+      "name": "User",
+      "type": "Class",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
+      "line_start": 10,
+      "docstring": null,
+      "source_code": "class User:\n    def save(self):\n        pass",
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::User::save",
+      "name": "save",
+      "type": "Function",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
+      "line_start": 11,
+      "docstring": null,
+      "source_code": "def save(self):\n        pass",
+      "is_async": false,
+      "decorators": []
+    },
+    {
+      "id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::c",
+      "name": "c",
+      "type": "Function",
+      "file_path": "C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
+      "line_start": 14,
+      "docstring": null,
+      "source_code": "def c(user):\n    user.save()",
       "is_async": false,
       "decorators": []
     }
@@ -961,6 +1164,12 @@
       "confidence": 0.0
     },
     {
+      "type": "IMPORTS",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py",
+      "target_id": "dep:dotenv",
+      "confidence": 0.0
+    },
+    {
       "type": "DEFINES",
       "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py",
       "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_extract",
@@ -970,6 +1179,12 @@
       "type": "CALLS",
       "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_extract",
       "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/merger.py::merge_project",
+      "confidence": 0.7
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_extract",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
       "confidence": 0.7
     },
     {
@@ -983,6 +1198,72 @@
       "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_export",
       "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/export/obsidian.py::export",
       "confidence": 0.7
+    },
+    {
+      "type": "DEFINES",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_query",
+      "confidence": 1.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_query",
+      "target_id": "func_ref:QueryEngine",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_query",
+      "target_id": "func_ref:print",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_query",
+      "target_id": "func_ref:print",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_query",
+      "target_id": "func_ref:input",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_query",
+      "target_id": "func_ref:question.lower",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_query",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::ask",
+      "confidence": 0.7
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_query",
+      "target_id": "func_ref:print",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_query",
+      "target_id": "func_ref:print",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_query",
+      "target_id": "func_ref:history.append",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_query",
+      "target_id": "func_ref:history.append",
+      "confidence": 0.0
     },
     {
       "type": "DEFINES",
@@ -1029,6 +1310,12 @@
     {
       "type": "CALLS",
       "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::main",
+      "target_id": "func_ref:p_ext.add_argument",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::main",
       "target_id": "func_ref:sub.add_parser",
       "confidence": 0.0
     },
@@ -1047,6 +1334,18 @@
     {
       "type": "CALLS",
       "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::main",
+      "target_id": "func_ref:sub.add_parser",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::main",
+      "target_id": "func_ref:p_qry.add_argument",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::main",
       "target_id": "func_ref:parser.parse_args",
       "confidence": 0.0
     },
@@ -1060,6 +1359,12 @@
       "type": "CALLS",
       "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::main",
       "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_export",
+      "confidence": 0.7
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::main",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/cli.py::cmd_query",
       "confidence": 0.7
     },
     {
@@ -2714,60 +3019,6 @@
     },
     {
       "type": "IMPORTS",
-      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
-      "target_id": "dep:os",
-      "confidence": 0.0
-    },
-    {
-      "type": "DEFINES",
-      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
-      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::a",
-      "confidence": 1.0
-    },
-    {
-      "type": "CALLS",
-      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::a",
-      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::b",
-      "confidence": 0.7
-    },
-    {
-      "type": "CALLS",
-      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::a",
-      "target_id": "func_ref:os.path.join",
-      "confidence": 0.0
-    },
-    {
-      "type": "DEFINES",
-      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
-      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::b",
-      "confidence": 1.0
-    },
-    {
-      "type": "DEFINES",
-      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
-      "target_id": "class:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::User",
-      "confidence": 1.0
-    },
-    {
-      "type": "CONTAINS",
-      "source_id": "class:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::User",
-      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::User::save",
-      "confidence": 1.0
-    },
-    {
-      "type": "DEFINES",
-      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
-      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::c",
-      "confidence": 1.0
-    },
-    {
-      "type": "CALLS",
-      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::c",
-      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::User::save",
-      "confidence": 0.7
-    },
-    {
-      "type": "IMPORTS",
       "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/explain/formatter.py",
       "target_id": "dep:networkx",
       "confidence": 0.0
@@ -3321,6 +3572,12 @@
     {
       "type": "CALLS",
       "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py::_Extractor::visit_ClassDef",
+      "target_id": "func_ref:ast.get_source_segment",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py::_Extractor::visit_ClassDef",
       "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py::_decorator_name",
       "confidence": 0.7
     },
@@ -3406,6 +3663,12 @@
       "type": "CALLS",
       "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py::_Extractor::_handle_function",
       "target_id": "func_ref:ast.get_docstring",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/extraction/extractor.py::_Extractor::_handle_function",
+      "target_id": "func_ref:ast.get_source_segment",
       "confidence": 0.0
     },
     {
@@ -4160,6 +4423,156 @@
     },
     {
       "type": "IMPORTS",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py",
+      "target_id": "dep:json",
+      "confidence": 0.0
+    },
+    {
+      "type": "IMPORTS",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py",
+      "target_id": "dep:os",
+      "confidence": 0.0
+    },
+    {
+      "type": "IMPORTS",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py",
+      "target_id": "dep:pathlib",
+      "confidence": 0.0
+    },
+    {
+      "type": "IMPORTS",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py",
+      "target_id": "dep:neo4j",
+      "confidence": 0.0
+    },
+    {
+      "type": "DEFINES",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "confidence": 1.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:os.environ.get",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:os.environ.get",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:os.environ.get",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:json.loads",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:Path",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:GraphDatabase.driver",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:driver.session",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py::GraphViewerApp::run",
+      "confidence": 0.5
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py::GraphViewerApp::run",
+      "confidence": 0.5
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:_NODE_MERGE.format",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:node.get",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:node.get",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:node.get",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:_EDGE_MERGE.get",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/app/graph_viewer.py::GraphViewerApp::run",
+      "confidence": 0.5
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:driver.close",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:print",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:len",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:print",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/graph/loader.py::load",
+      "target_id": "func_ref:data.get",
+      "confidence": 0.0
+    },
+    {
+      "type": "IMPORTS",
       "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/ingestion/file_scanner.py",
       "target_id": "dep:pathlib",
       "confidence": 0.0
@@ -4219,6 +4632,12 @@
       "confidence": 0.0
     },
     {
+      "type": "IMPORTS",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/parsing/parser.py",
+      "target_id": "dep:typing",
+      "confidence": 0.0
+    },
+    {
       "type": "DEFINES",
       "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/parsing/parser.py",
       "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/parsing/parser.py::parse_file",
@@ -4233,13 +4652,283 @@
     {
       "type": "CALLS",
       "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/parsing/parser.py::parse_file",
-      "target_id": "func_ref:ast.parse",
+      "target_id": "func_ref:f.read",
       "confidence": 0.0
     },
     {
       "type": "CALLS",
       "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/parsing/parser.py::parse_file",
-      "target_id": "func_ref:f.read",
+      "target_id": "func_ref:ast.parse",
+      "confidence": 0.0
+    },
+    {
+      "type": "IMPORTS",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py",
+      "target_id": "dep:json",
+      "confidence": 0.0
+    },
+    {
+      "type": "IMPORTS",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py",
+      "target_id": "dep:os",
+      "confidence": 0.0
+    },
+    {
+      "type": "IMPORTS",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py",
+      "target_id": "dep:pathlib",
+      "confidence": 0.0
+    },
+    {
+      "type": "IMPORTS",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py",
+      "target_id": "dep:anthropic",
+      "confidence": 0.0
+    },
+    {
+      "type": "DEFINES",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py",
+      "target_id": "class:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine",
+      "confidence": 1.0
+    },
+    {
+      "type": "CONTAINS",
+      "source_id": "class:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::__init__",
+      "confidence": 1.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::__init__",
+      "target_id": "func_ref:json.loads",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::__init__",
+      "target_id": "func_ref:Path",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::__init__",
+      "target_id": "func_ref:anthropic.Anthropic",
+      "confidence": 0.0
+    },
+    {
+      "type": "CONTAINS",
+      "source_id": "class:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::find_nodes",
+      "confidence": 1.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::find_nodes",
+      "target_id": "func_ref:question.lower",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::find_nodes",
+      "target_id": "func_ref:set",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::find_nodes",
+      "target_id": "func_ref:self.nodes.values",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::find_nodes",
+      "target_id": "func_ref:matched.append",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::find_nodes",
+      "target_id": "func_ref:seen.add",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::find_nodes",
+      "target_id": "func_ref:self.nodes.values",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::find_nodes",
+      "target_id": "func_ref:any",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::find_nodes",
+      "target_id": "func_ref:q.split",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::find_nodes",
+      "target_id": "func_ref:len",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::find_nodes",
+      "target_id": "func_ref:matched.append",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::find_nodes",
+      "target_id": "func_ref:seen.add",
+      "confidence": 0.0
+    },
+    {
+      "type": "CONTAINS",
+      "source_id": "class:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "confidence": 1.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "target_id": "func_ref:node.get",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "target_id": "func_ref:lines.append",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "target_id": "func_ref:node.get",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "target_id": "func_ref:len",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "target_id": "func_ref:lines.append",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "target_id": "func_ref:code.splitlines",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "target_id": "func_ref:lines.append",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "target_id": "func_ref:self.outgoing.get",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "target_id": "func_ref:self.nodes.get",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "target_id": "func_ref:lines.append",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "target_id": "func_ref:self.incoming.get",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "target_id": "func_ref:self.nodes.get",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "target_id": "func_ref:lines.append",
+      "confidence": 0.0
+    },
+    {
+      "type": "CONTAINS",
+      "source_id": "class:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::build_context",
+      "confidence": 1.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::build_context",
+      "target_id": "func_ref:self.nodes.values",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::build_context",
+      "target_id": "func_ref:parts.append",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::build_context",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::_node_summary",
+      "confidence": 0.7
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::build_context",
+      "target_id": "func_ref:parts.append",
+      "confidence": 0.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::build_context",
+      "target_id": "func_ref:names_used.append",
+      "confidence": 0.0
+    },
+    {
+      "type": "CONTAINS",
+      "source_id": "class:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::ask",
+      "confidence": 1.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::ask",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::find_nodes",
+      "confidence": 0.7
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::ask",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::build_context",
+      "confidence": 0.7
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/engine.py::QueryEngine::ask",
+      "target_id": "func_ref:self._client.messages.create",
       "confidence": 0.0
     },
     {
@@ -4373,6 +5062,60 @@
       "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/query/graph_query.py::format_call_chain",
       "target_id": "func_ref:len",
       "confidence": 0.0
+    },
+    {
+      "type": "IMPORTS",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
+      "target_id": "dep:os",
+      "confidence": 0.0
+    },
+    {
+      "type": "DEFINES",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::a",
+      "confidence": 1.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::a",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::b",
+      "confidence": 0.7
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::a",
+      "target_id": "func_ref:os.path.join",
+      "confidence": 0.0
+    },
+    {
+      "type": "DEFINES",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::b",
+      "confidence": 1.0
+    },
+    {
+      "type": "DEFINES",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
+      "target_id": "class:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::User",
+      "confidence": 1.0
+    },
+    {
+      "type": "CONTAINS",
+      "source_id": "class:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::User",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::User::save",
+      "confidence": 1.0
+    },
+    {
+      "type": "DEFINES",
+      "source_id": "module:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::c",
+      "confidence": 1.0
+    },
+    {
+      "type": "CALLS",
+      "source_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::c",
+      "target_id": "func:C:/Users/Admin/OneDrive/Tài liệu/PA/data/sample_repo/test_attr.py::User::save",
+      "confidence": 0.7
     }
   ]
 }

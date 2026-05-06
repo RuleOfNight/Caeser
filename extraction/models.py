@@ -26,6 +26,7 @@ class GraphNode:
     file_path: str
     line_start: int
     docstring: Optional[str] = None
+    source_code: Optional[str] = None
     is_async: bool = False
     decorators: List[str] = field(default_factory=list)
 

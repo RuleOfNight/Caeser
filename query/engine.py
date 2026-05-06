@@ -47,6 +47,13 @@ class QueryEngine:
         lines = [f"[{node['type']}] {node['name']} — {node['file_path']}:{node['line_start']}"]
         if node.get("docstring"):
             lines.append(f"  doc: {node['docstring'][:120]}")
+        if node.get("source_code"):
+            code = node["source_code"]
+            if len(code) > 1500:
+                code = code[:1500] + "\n  ... (truncated)"
+            lines.append("  source:")
+            for line in code.splitlines():
+                lines.append(f"    {line}")
         for edge in self.outgoing.get(node["id"], []):
             tgt = self.nodes.get(edge["target_id"])
             if tgt:

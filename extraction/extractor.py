@@ -5,16 +5,17 @@ from typing import List, Optional, Tuple
 from .models import EdgeType, GraphEdge, GraphNode, NodeType
 
 
-def extract(tree: ast.AST, file_path: str) -> Tuple[List[GraphNode], List[GraphEdge]]:
-    visitor = _Extractor(file_path)
+def extract(tree: ast.AST, file_path: str, source: str = "") -> Tuple[List[GraphNode], List[GraphEdge]]:
+    visitor = _Extractor(file_path, source)
     visitor.visit(tree)
     return visitor.nodes, visitor.edges
 
 
 class _Extractor(ast.NodeVisitor):
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, source: str = ""):
         # Chuẩn hóa về forward slash để node ID nhất quán trên Windows/Linux
         self.file_path = Path(file_path).as_posix()
+        self.source = source
         self.nodes: List[GraphNode] = []
         self.edges: List[GraphEdge] = []
 
@@ -61,6 +62,7 @@ class _Extractor(ast.NodeVisitor):
             file_path=self.file_path,
             line_start=node.lineno,
             docstring=ast.get_docstring(node),
+            source_code=ast.get_source_segment(self.source, node) if self.source else None,
             decorators=[_decorator_name(d) for d in node.decorator_list],
         ))
         self.edges.append(GraphEdge(
@@ -112,6 +114,7 @@ class _Extractor(ast.NodeVisitor):
             file_path=self.file_path,
             line_start=node.lineno,
             docstring=ast.get_docstring(node),
+            source_code=ast.get_source_segment(self.source, node) if self.source else None,
             is_async=is_async,
             decorators=[_decorator_name(d) for d in node.decorator_list],
         ))
