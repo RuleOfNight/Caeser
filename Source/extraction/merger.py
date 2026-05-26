@@ -32,8 +32,8 @@ def merge_project(project_root: str, output_path: str, project_name: str = None)
     print(f"[*] Extracting {len(files)} files...")
     for file_path in files:
         try:
-            tree = parse_file(file_path)
-            nodes, edges = extract(tree, file_path)
+            tree, source = parse_file(file_path)
+            nodes, edges = extract(tree, file_path, source)
             all_nodes.extend(nodes)
             all_edges.extend(edges)
         except (SyntaxError, Exception) as e:
@@ -80,6 +80,7 @@ def _node_dict(n: GraphNode) -> dict:
         "file_path": n.file_path,
         "line_start": n.line_start,
         "docstring": n.docstring,
+        "source_code": n.source_code,
         "is_async": n.is_async,
         "decorators": n.decorators,
     }

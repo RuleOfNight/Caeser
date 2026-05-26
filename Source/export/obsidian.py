@@ -21,7 +21,7 @@ def export(graph_path: str, vault_path: str) -> None:
     project_name = graph["project"]
     nodes = {n["id"]: n for n in graph["nodes"]}
 
-    # Chỉ build adjacency cho edges đã resolved (confidence > 0.0)
+    # Chỉ build cho edges đã resolved (confidence > 0.0)
     # Edge confidence=0.0 là external lib hoặc ambiguous — tạo wikilink gãy nếu giữ lại
     outgoing: dict[str, list[dict]] = {nid: [] for nid in nodes}
     incoming: dict[str, list[dict]] = {nid: [] for nid in nodes}
@@ -58,19 +58,19 @@ def _render(node, nodes, outgoing, incoming) -> str:
         return _function(node, nodes, outgoing, incoming)
     return ""
 
-
+# lọc edges theo loại 
 def _edges_of(nid, adj, edge_type):
     return [e for e in adj.get(nid, []) if e["type"] == edge_type]
 
-
+# lấy target node từ edges
 def _targets(edges, nodes):
     return [nodes[e["target_id"]] for e in edges if e["target_id"] in nodes]
 
-
+# lấy source node từ edges
 def _sources(edges, nodes):
     return [nodes[e["source_id"]] for e in edges if e["source_id"] in nodes]
 
-
+# render file .md, liệt kê imports, classes, funcs, imported by
 def _module(node, nodes, outgoing, incoming) -> str:
     nid = node["id"]
     lines = [f"# {node['name']}", f"**Type:** Module", f"**File:** `{node['file_path']}`", ""]
@@ -94,7 +94,7 @@ def _module(node, nodes, outgoing, incoming) -> str:
 
     return "\n".join(lines)
 
-
+# render file .md classes, liệt kê docstring, methods, inherits, defined in
 def _class(node, nodes, outgoing, incoming) -> str:
     nid = node["id"]
     lines = [
@@ -122,7 +122,7 @@ def _class(node, nodes, outgoing, incoming) -> str:
 
     return "\n".join(lines)
 
-
+# render file .md function, liệt kê docstring, thuộc class/module nào, calls, called by
 def _function(node, nodes, outgoing, incoming) -> str:
     nid = node["id"]
     type_label = "Async Function" if node.get("is_async") else "Function"

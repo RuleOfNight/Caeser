@@ -3,7 +3,7 @@ from typing import List
 
 from extraction.models import GraphEdge, GraphNode
 
-
+# add các nodes và edges đã resolve (có confidence > 0)
 def build_graph(nodes: List[GraphNode], edges: List[GraphEdge]) -> nx.MultiDiGraph:
     g = nx.MultiDiGraph()
     node_ids = set()
