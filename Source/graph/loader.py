@@ -31,9 +31,9 @@ def load(
     user: str = None,
     password: str = None,
 ) -> None:
-    uri      = uri      or os.environ.get("NEO4J_URI",     "bolt://localhost:7687")
-    user     = user     or os.environ.get("NEO4J_USER",    "neo4j")
-    password = password or os.environ.get("NEO4J_PASSWORD", "")
+    uri      = uri      or os.environ.get("NEO4J_URI")
+    user     = user     or os.environ.get("NEO4J_USER")
+    password = password or os.environ.get("NEO4J_PASSWORD")
 
     data = json.loads(Path(json_path).read_text(encoding="utf-8"))
     nodes = data["nodes"]

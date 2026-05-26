@@ -9,17 +9,15 @@ def get_node_context(graph: nx.DiGraph, node_id: str) -> dict:
 
 
 def get_function_calls(graph: nx.DiGraph, node_id: str) -> list[str]:
-    # raise NetworkXError nếu node_id không tồn tại trong graph
     return list(graph.successors(node_id))
 
 
 def get_callers(graph: nx.DiGraph, node_id: str) -> list[str]:
-    # raise NetworkXError nếu node_id không tồn tại trong graph
     return list(graph.predecessors(node_id))
 
 
 def get_call_chain(graph: nx.DiGraph, start_node_id: str, depth: int = 2) -> dict:
-    # path lưu tập tổ tiên; trả về "[cycle]" thay vì dict khi phát hiện vòng lặp
+    # path lưu tập root node, trả về "[cycle]" thay vì dict khi phát hiện cycle
     def _expand(node: str, remaining_depth: int, path: frozenset):
         if node in path:
             return "[cycle]"
@@ -35,7 +33,6 @@ def get_call_chain(graph: nx.DiGraph, start_node_id: str, depth: int = 2) -> dic
 
 
 def format_call_chain(chain: dict) -> str:
-    # rút gọn "path/to/file.py::func" thành "func (file.py)" cho dễ đọc
     def _short(node_id: str) -> str:
         if "::" in node_id:
             file_path, name = node_id.split("::", 1)
@@ -47,7 +44,7 @@ def format_call_chain(chain: dict) -> str:
         connector = "└── " if is_last else "├── "
         extension = "    " if is_last else "│   "
         label = _short(node_id)
-        if subtree == "[cycle]":  # dừng vẽ nhánh khi gặp vòng lặp
+        if subtree == "[cycle]":
             return [prefix + connector + label + "  [cycle]"]
         lines = [prefix + connector + label]
         children = list(subtree.items())
