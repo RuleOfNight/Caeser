@@ -1,6 +1,0 @@
-{
-  "model": "claude-sonnet-4-6",
-  "hooks": [],
-  "env": {},
-  "notes": "Register hooks here. Each hook has: event, command, and optional matcher."
-}

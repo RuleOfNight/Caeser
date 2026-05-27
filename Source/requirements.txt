@@ -1,6 +1,5 @@
 networkx
 matplotlib
-neo4j
 pydantic
 colorama
 python-dotenv
