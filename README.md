@@ -8,7 +8,7 @@ Hệ thống phân tích codebase Python và papers nghiên cứu, lưu trữ d�
 
 **Phân tích codebase** — Trích xuất cấu trúc toàn bộ project Python thành đồ thị có cấu trúc: module, class, function và các quan hệ giữa chúng (import, kế thừa, gọi hàm). Đồ thị lưu dưới dạng JSON, có thể xuất ra Obsidian vault để duyệt trực quan hoặc truy vấn qua CLI.
 
-**Hỏi đáp paper** — Trò chuyện trực tiếp với một bài báo nghiên cứu (định dạng Markdown). Câu trả lời kèm trích dẫn nguồn chính xác đến từng section.
+**Hỏi đáp paper** — Đặt câu hỏi với một paper (định dạng Markdown). Câu trả lời kèm trích dẫn nguồn chính xác.
 
 ---
 
