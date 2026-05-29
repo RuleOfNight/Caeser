@@ -1,6 +1,6 @@
 from pathlib import Path
 
-_EXCLUDE = {".venv", "venv", "__pycache__", ".git"}
+_EXCLUDE = {".venv", "venv", "__pycache__", ".git", "__init__.py"}
 
 
 def scan_py_files(root: str) -> list[str]:

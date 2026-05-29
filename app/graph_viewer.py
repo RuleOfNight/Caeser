@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import os
+import sys
+import argparse
 import tkinter as tk
 from collections import defaultdict
 from dataclasses import dataclass
 from tkinter import ttk
 from tkinter.scrolledtext import ScrolledText
 from typing import Any
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -469,3 +473,10 @@ def launch_graph_viewer(repo_path: str) -> None:
     """Launch the local desktop graph viewer."""
     app = GraphViewerApp(repo_path)
     app.run()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Launch the local desktop graph viewer")
+    parser.add_argument("repo_path", nargs="?", default=".", help="Repository path to visualize")
+    args = parser.parse_args()
+    launch_graph_viewer(args.repo_path)

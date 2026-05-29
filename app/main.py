@@ -71,7 +71,7 @@ def run(repo_path: str):
     print(" KIỂM THỬ TÌM KIẾM HYBRID SEARCH (VECTOR + BM25)")
     print("="*50)
     
-    ai_query = "extract nodes and edges from abstract syntax tree"
+    ai_query = "find extractor to extract function definitions"
     print(f"[*] Truy vấn của AI: '{ai_query}'")
     
     top_contexts = search_jit_context(graph, vstore, ai_query, top_k=2)
