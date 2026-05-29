@@ -38,3 +38,16 @@ class GraphEdge:
     target_id: str
     # 0.0 = unresolved (external lib or ambiguous call) — filtered out in export/query
     confidence: float = 1.0
+
+
+@dataclass
+class Function:
+    name: str
+    file_path: str
+    calls: List[str] = field(default_factory=list)
+
+
+@dataclass
+class FileModule:
+    file_path: str
+    functions: List[Function] = field(default_factory=list)

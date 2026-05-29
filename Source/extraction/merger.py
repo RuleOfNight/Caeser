@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List
 
 from ingestion.file_scanner import scan_py_files
-from parsing.parser import parse_file
+from parsing.parser import parse_file_with_source
 from .extractor import extract
 from .resolver import ImportResolver
 from .models import GraphEdge, GraphNode
@@ -32,7 +32,7 @@ def merge_project(project_root: str, output_path: str, project_name: str = None)
     print(f"[*] Extracting {len(files)} files...")
     for file_path in files:
         try:
-            tree, source = parse_file(file_path)
+            tree, source = parse_file_with_source(file_path)
             nodes, edges = extract(tree, file_path, source)
             all_nodes.extend(nodes)
             all_edges.extend(edges)

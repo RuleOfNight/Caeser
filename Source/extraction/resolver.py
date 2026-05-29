@@ -54,12 +54,26 @@ class ImportResolver:
             resolved = self._resolve_module(tgt[4:])
             return self._make(edge, resolved, conf_hit=1.0)
 
+        if tgt.startswith("module:"):
+            resolved = self._resolve_module(tgt[7:])
+            return self._make(edge, resolved, conf_hit=1.0)
+
         if tgt.startswith("class_ref:"):
             resolved = self._resolve_class(tgt[10:])
             return self._make(edge, resolved, conf_hit=1.0)
 
+        if tgt.startswith("class::"):
+            resolved = self._resolve_class(tgt[7:])
+            return self._make(edge, resolved, conf_hit=1.0)
+
         if tgt.startswith("func_ref:"):
-            resolved, conf = self._resolve_func(tgt[9:], edge.source_id)
+            resolved_name = tgt[9:]
+            resolved, conf = self._resolve_func(resolved_name, edge.source_id)
+            return self._make(edge, resolved, conf_hit=conf)
+
+        if tgt.startswith("func::"):
+            resolved_name = tgt[6:]
+            resolved, conf = self._resolve_func(resolved_name, edge.source_id)
             return self._make(edge, resolved, conf_hit=conf)
 
         return edge  # edge đã resolve sẵn (DEFINES, CONTAINS) — giữ nguyên
