@@ -59,7 +59,7 @@ def main():
     p_ext.add_argument("--input",  required=True, help="Project root directory")
     p_ext.add_argument("--output", required=True, help="Output JSON path")
     p_ext.add_argument("--name",                  help="Project name (default: folder name)")
-    p_ext.add_argument("--load-neo4j", action="store_true", help="Load graph into Neo4j after extraction")
+    # p_ext.add_argument("--load-neo4j", action="store_true", help="Load graph into Neo4j after extraction")
 
     p_exp = sub.add_parser("export", help="Export graph → Obsidian vault")
     p_exp.add_argument("--graph", required=True, help="Input JSON graph path")
