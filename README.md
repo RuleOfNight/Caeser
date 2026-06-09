@@ -49,11 +49,14 @@ ANTHROPIC_API_KEY=sk-ant-...
 ### Phân tích codebase
 
 ```bash
-# Trích xuất project → graph.json
-python -m extraction.merger --input <thư_mục_project> --output data/graph.json
+# graph hóa source code
+python cli.py extract --input "source_path" --output graph_caeser.json
 
-# Xuất ra Obsidian vault
-python -m export.obsidian --graph data/graph.json --out data/obsidian
+# biến file graph JSON thành Obsidian Vault để xem bằng Obsidian
+python cli.py export --graph "graph_path.json" --out Caeser_vault
+
+# bắt đầu hỏi đáp trong terminal
+python cli.py query --graph "graph_path.json"
 ```
 
 Output graph.json mẫu:
